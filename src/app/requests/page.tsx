@@ -36,20 +36,25 @@ const RequestAMPage = () => {
   const [acceptBookingRequest] = useAcceptBookingRequestMutation();
   const [updateRequestStatus] = useUpdateAssetStatusMutation();
   const { data: user } = useGetUserInfoQuery();
-
-  const handleApprove = async (requestId: string) => {
-    setLoadingRequestId(requestId);
+  const [acceptAssetRequest] = useAcceptAssetRequestMutation();
+  const handleApprove = async (request: AssetRequest) => {
     try {
-      await acceptBookingRequest({
-        requestId,
-        userId: user?.id ?? "",
-      }).unwrap();
+      setLoadingRequestId(request.requestId);
 
-      toast.success("Request approved successfully!");
-    } catch (error: any) {
-      toast.error(
-        error?.data || "Failed to approve request. Please try again.",
-      );
+      if (request.asset) {
+        // Booking-based
+        await acceptBookingRequest({
+          requestId: request.requestId,
+          userId: user?.id ?? "",
+        }).unwrap();
+      } else {
+        // Category-based
+        await acceptAssetRequest(request.requestId).unwrap();
+      }
+
+      toast.success("Approved successfully!");
+    } catch (error) {
+      toast.error("Approval failed!");
     } finally {
       setLoadingRequestId(null);
     }
@@ -156,7 +161,7 @@ const RequestAMPage = () => {
                                 variant="outlined"
                                 size="small"
                                 color="success"
-                                onClick={() => handleApprove(r.requestId)}
+                                onClick={() => handleApprove(r)}
                               >
                                 {loadingRequestId === r.requestId ? (
                                   <CircularProgress size={16} />
@@ -182,7 +187,6 @@ const RequestAMPage = () => {
               </Card>
             )}
 
-            {/* Category-Based Requests */}
             {categoryBased.length > 0 && (
               <Card>
                 <CardContent>
@@ -194,6 +198,7 @@ const RequestAMPage = () => {
                       <thead>
                         <tr className="bg-gray-200">
                           <th className="p-2">Description</th>
+                          <th className="p-2">Categories</th>
                           <th className="p-2">Status</th>
                           <th className="p-2">Time</th>
                           <th className="p-2">Task</th>
@@ -201,10 +206,22 @@ const RequestAMPage = () => {
                           <th className="p-2">Actions</th>
                         </tr>
                       </thead>
+
                       <tbody>
                         {categoryBased.map((r) => (
                           <tr key={r.requestId} className="border-t">
                             <td className="p-2">{r.description}</td>
+
+                            <td className="p-2">
+                              <ul className="list-disc pl-5 text-sm text-gray-600">
+                                {r.categories?.map((cat) => (
+                                  <li key={cat.categoryID}>
+                                    {cat.name} (x{cat.quantity})
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+
                             <td className="p-2">{statusMapping[r.status]}</td>
                             <td className="p-2">
                               <div>
@@ -223,7 +240,7 @@ const RequestAMPage = () => {
                                 variant="outlined"
                                 size="small"
                                 color="success"
-                                onClick={() => handleApprove(r.requestId)}
+                                onClick={() => handleApprove(r)}
                               >
                                 {loadingRequestId === r.requestId ? (
                                   <CircularProgress size={16} />
