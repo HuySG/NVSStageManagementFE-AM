@@ -86,6 +86,11 @@ const Sidebar = () => {
             label="Borrow Asset List"
             href="/borrowAssets"
           />
+           <SidebarLink
+            icon={Warehouse}
+            label="Return Asset List"
+            href="/returnAssets"
+          />
         </nav>
       </div>
       <UserProfile />

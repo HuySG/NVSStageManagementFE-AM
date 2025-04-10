@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { ReactNode } from "react";
 
 export interface Project {
   projectID: string;
@@ -153,6 +154,7 @@ export interface AssetType {
 
 // 📌 Định nghĩa tài sản
 export interface Asset {
+  returnDate: ReactNode;
   assetID: string;
   assetName: string;
   model: string;
@@ -220,6 +222,17 @@ export interface BorrowedAsset {
   description: string;
   status: string;
 }
+export interface ReturnedAssetDTO {
+  returnedAssetID: string;
+  taskID: string | null;
+  assetID: string | null;
+  returnTime: string | null;
+  description: string | null;
+  milestoneName?: string | null;
+  projectID?: string | null;
+  title?: string | null;
+}
+
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -245,6 +258,7 @@ export const api = createApi({
     "Assets",
     "Attachments",
     "BorrowedAssets",
+    "ReturnAssets",
   ],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
@@ -488,6 +502,11 @@ export const api = createApi({
       }),
       invalidatesTags: ["BorrowedAssets"],
     }),
+    getReturnAssets: build.query<ReturnedAssetDTO[], void>({
+      query: () =>({ url: `returns`,
+        providesTags: ["ReturnAssets"],})
+       
+    }),
   }),
 });
 
@@ -556,4 +575,6 @@ export const {
   useCreateBorrowedAssetMutation,
   //deleteBorrowedAsset
   useDeleteBorrowedAssetMutation,
+  //getReturnAssets
+  useGetReturnAssetsQuery,
 } = api;
