@@ -69,7 +69,7 @@ export interface Comment {
 }
 
 export interface TaskUser {
-  userID: string; // Phải khớp với API trả về
+  userID: string;
   fullName?: string;
   dayOfBirth?: string;
   email?: string;
@@ -90,13 +90,13 @@ export interface Task {
   createDate: string;
   updateBy: string;
   updateDate: string;
-  attachments?: Attachment[]; // Giữ nguyên
-  assigneeInfo?: AssigneeInfo; // Sửa thành một object thay vì array
-  watchers?: Watcher[]; // Giữ nguyên
-  projectID?: Project; // Giữ nguyên
+  attachments?: Attachment[];
+  assigneeInfo?: AssigneeInfo;
+  watchers?: Watcher[];
+  projectID?: Project;
   milestoneId: Milestone;
-  comments?: Comment[]; // Giữ nguyên
-  TaskUser?: TaskUser[]; // Giữ nguyên
+  comments?: Comment[];
+  TaskUser?: TaskUser[];
 }
 export interface Role {
   id: number;
@@ -200,6 +200,7 @@ export interface RequesterInfo {
   fullName: string;
   email: string;
   phoneNumber: string;
+  department: Department;
 }
 
 export interface Attachment {
@@ -209,6 +210,17 @@ export interface Attachment {
   taskId: string;
   uploadedById: string; // Chỉnh từ String thành string
 }
+
+export interface BorrowedAsset {
+  borrowedId: string;
+  assetID: string;
+  taskID: string;
+  borrowTime: string;
+  endTime: string;
+  description: string;
+  status: string;
+}
+
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -232,6 +244,7 @@ export const api = createApi({
     "AssetTypes",
     "Assets",
     "Attachments",
+    "BorrowedAssets",
   ],
   endpoints: (build) => ({
     getProjects: build.query<Project[], void>({
@@ -298,6 +311,12 @@ export const api = createApi({
         { type: "Tasks", id: taskID },
       ],
     }),
+    getTaskById: build.query<Task, string>({
+      query: (taskId) => `tasks/taskId?taskId=${taskId}`,
+      providesTags: ["Tasks"],
+    }),
+
+    // API User
     loginUser: build.mutation<
       { result: { token: string; authenticated: boolean } }, // Sửa kiểu dữ liệu
       { email: string; password: string }
@@ -321,6 +340,11 @@ export const api = createApi({
       transformResponse: (response: { result: User[] }) => response.result, // Chỉ lấy result
       providesTags: ["Users"],
     }),
+    getUserById: build.query<User, string>({
+      query: (userId) => `user/${userId}`,
+      providesTags: ["Users"],
+    }),
+
     getProjectTasks: build.query<ProjectTask[], void>({
       query: () => "projects/project-task",
       providesTags: ["ProjectTasks"],
@@ -434,6 +458,36 @@ export const api = createApi({
       }),
       invalidatesTags: ["Attachments"],
     }),
+    getBorrowedAssets: build.query<BorrowedAsset[], void>({
+      query: () => "borrowed-assets",
+      providesTags: ["BorrowedAssets"],
+    }),
+
+    getBorrowedAssetById: build.query<BorrowedAsset, string>({
+      query: (borrowedId) =>
+        `borrowed-assets/borrowedId?borrowedId=${borrowedId}`,
+      providesTags: (result, error, borrowedId) => [
+        { type: "BorrowedAssets", id: borrowedId },
+      ],
+    }),
+
+    createBorrowedAsset: build.mutation<BorrowedAsset, Partial<BorrowedAsset>>({
+      query: (data) => ({
+        url: "borrowed-asset/create",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["BorrowedAssets"],
+    }),
+
+    deleteBorrowedAsset: build.mutation<void, string>({
+      query: (borrowedId) => ({
+        url: `borrowed-asset/borrowedId`,
+        method: "DELETE",
+        params: { borrowedId },
+      }),
+      invalidatesTags: ["BorrowedAssets"],
+    }),
   }),
 });
 
@@ -456,12 +510,16 @@ export const {
   useUpdateTaskStatusMutation,
   //updateTask
   useUpdateTaskMutation,
+  //getTaskById
+  useGetTaskByIdQuery,
   //loginUser
   useLoginUserMutation,
   //getUserInfo
   useGetUserInfoQuery,
   //getUsers
   useGetUsersQuery,
+  //getUserById
+  useGetUserByIdQuery,
   //getProjectTasks
   useGetProjectTasksQuery,
   //getRequestAssets
@@ -490,4 +548,12 @@ export const {
   usePostTaskCommentMutation,
   //uploadFileMetadata
   useUploadFileMetadataMutation,
+  //getBorrowedAssets
+  useGetBorrowedAssetsQuery,
+  //getBorrowedAssetById
+  useGetBorrowedAssetByIdQuery,
+  //createBorrowedAsset
+  useCreateBorrowedAssetMutation,
+  //deleteBorrowedAsset
+  useDeleteBorrowedAssetMutation,
 } = api;
