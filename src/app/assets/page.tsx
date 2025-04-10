@@ -178,7 +178,6 @@ const AssetsTable = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
               <TableHead>Asset Name</TableHead>
               <TableHead>Model</TableHead>
               <TableHead>Code</TableHead>
@@ -194,19 +193,6 @@ const AssetsTable = () => {
           <TableBody>
             {paginatedAssets.map((asset) => (
               <TableRow key={asset.assetID}>
-                <TableCell>
-                  {asset.image ? (
-                    <Image
-                      src={asset.image}
-                      alt="Asset Image"
-                      width={50}
-                      height={50}
-                      className="rounded-md"
-                    />
-                  ) : (
-                    "No Image"
-                  )}
-                </TableCell>
                 <TableCell>{asset.assetName}</TableCell>
                 <TableCell>{asset.model}</TableCell>
                 <TableCell>{asset.code}</TableCell>
