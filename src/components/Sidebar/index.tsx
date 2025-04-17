@@ -1,7 +1,6 @@
 "use client";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsSidebarCollapsed } from "@/state";
-import { useGetProjectsQuery } from "@/state/api";
 import {
   AlertCircle,
   AlertOctagon,
@@ -32,7 +31,6 @@ const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
   const dispatch = useAppDispatch();
-  const { data: projects } = useGetProjectsQuery();
   const isSidebarCollapsed = useAppSelector(
     (state) => state.global.isSidebarCollapsed,
   );
@@ -86,7 +84,7 @@ const Sidebar = () => {
             label="Borrow Asset List"
             href="/borrowAssets"
           />
-           <SidebarLink
+          <SidebarLink
             icon={Warehouse}
             label="Return Asset List"
             href="/returnAssets"
