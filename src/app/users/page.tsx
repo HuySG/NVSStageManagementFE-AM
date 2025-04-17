@@ -1,5 +1,4 @@
 "use client";
-import { useGetUsersQuery } from "@/state/api";
 import React from "react";
 import { useAppSelector } from "../redux";
 import Header from "@/components/Header";
@@ -12,6 +11,7 @@ import {
 } from "@mui/x-data-grid";
 import Image from "next/image";
 import { dataGridClassNames, dataGridSxStyles } from "@/app/lib/utils";
+import { useGetUsersQuery } from "@/state/api/modules/userApi";
 
 const CustomToolbar = () => (
   <GridToolbarContainer className="toolbar flex gap-2">
