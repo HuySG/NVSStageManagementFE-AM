@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useGetReturnAssetsQuery } from "@/state/api";
 import { Card, CardContent } from "@/components/ui/card";
+import { useGetReturnAssetsQuery } from "@/state/api/modules/returnAssetApi";
 
 const ReturnAssetsPage: React.FC = () => {
   const { data: assets = [], isLoading, error } = useGetReturnAssetsQuery();
@@ -11,13 +11,15 @@ const ReturnAssetsPage: React.FC = () => {
   console.log("Returned assets:", assets);
 
   if (isLoading) {
-    return <div className="p-4 text-center text-lg font-semibold">Loading...</div>;
+    return (
+      <div className="p-4 text-center text-lg font-semibold">Loading...</div>
+    );
   }
 
   if (error) {
     console.error("Error fetching return assets:", error);
     return (
-      <div className="p-4 text-center text-red-500 text-lg font-semibold">
+      <div className="p-4 text-center text-lg font-semibold text-red-500">
         Error loading return assets.
       </div>
     );
@@ -46,7 +48,7 @@ const ReturnAssetsPage: React.FC = () => {
   });
 
   return (
-    <div className="p-6 bg-gray-50 text-gray-800">
+    <div className="bg-gray-50 p-6 text-gray-800">
       <h1 className="mb-6 text-center text-3xl font-bold text-gray-900">
         Return Assets
       </h1>
@@ -64,42 +66,55 @@ const ReturnAssetsPage: React.FC = () => {
                   Returned Assets
                 </h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full border border-gray-300 text-sm text-left">
+                  <table className="w-full border border-gray-300 text-left text-sm">
                     <thead>
                       <tr className="bg-gray-200 text-gray-700">
-                        <th className="p-3 border-b border-gray-300">Returned Asset ID</th>
-                        <th className="p-3 border-b border-gray-300">Asset ID</th>
-                        <th className="p-3 border-b border-gray-300">Description</th>
-                        <th className="p-3 border-b border-gray-300">Return Time</th>
+                        <th className="border-b border-gray-300 p-3">
+                          Returned Asset ID
+                        </th>
+                        <th className="border-b border-gray-300 p-3">
+                          Asset ID
+                        </th>
+                        <th className="border-b border-gray-300 p-3">
+                          Description
+                        </th>
+                        <th className="border-b border-gray-300 p-3">
+                          Return Time
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {assets.map((asset, index) => (
                         <tr
                           key={asset.returnedAssetID}
-                          className={index % 2 === 0 ? "bg-gray-100" : "bg-white"}
+                          className={
+                            index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                          }
                         >
-                          <td className="p-3 border-b border-gray-300">
+                          <td className="border-b border-gray-300 p-3">
                             {asset.returnedAssetID}
                           </td>
-                          <td className="p-3 border-b border-gray-300">
+                          <td className="border-b border-gray-300 p-3">
                             {asset.assetID || "N/A"}
                           </td>
-                          <td className="p-3 border-b border-gray-300">
+                          <td className="border-b border-gray-300 p-3">
                             {asset.description || "N/A"}
                           </td>
-                          <td className="p-3 border-b border-gray-300">
+                          <td className="border-b border-gray-300 p-3">
                             {asset.returnTime
-                              ? new Date(asset.returnTime).toLocaleString("vi-VN", {
-                                  weekday: "short",
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "numeric",
-                                  minute: "numeric",
-                                  second: "numeric",
-                                  hour12: false,
-                                })
+                              ? new Date(asset.returnTime).toLocaleString(
+                                  "vi-VN",
+                                  {
+                                    weekday: "short",
+                                    year: "numeric",
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "numeric",
+                                    second: "numeric",
+                                    hour12: false,
+                                  },
+                                )
                               : "N/A"}
                           </td>
                         </tr>

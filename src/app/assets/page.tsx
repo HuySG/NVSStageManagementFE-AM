@@ -1,6 +1,5 @@
 "use client";
 import { useState, useMemo } from "react";
-import { useGetAssetsQuery } from "@/state/api";
 import Image from "next/image";
 import {
   Card,
@@ -18,6 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetAssetsQuery } from "@/state/api/modules/assetApi";
 
 const AssetsTable = () => {
   const { data: assets = [], error, isLoading } = useGetAssetsQuery();

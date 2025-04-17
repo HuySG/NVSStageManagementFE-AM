@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  useGetBorrowedAssetsQuery,
-  useGetAssetRequestsForManagerQuery,
-  BorrowedAsset,
-} from "@/state/api";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { CircularProgress } from "@mui/material";
 import BorrowedAssetDetailModal from "@/components/BorrowedAssetDetailModal";
+import { useGetBorrowedAssetsQuery } from "@/state/api/modules/borrowAssetApi";
+import { useGetAssetRequestsForManagerQuery } from "@/state/api/modules/requestApi";
+import { BorrowedAsset } from "@/types/borrowedAsset";
 
 const BorrowedAssetManagementPage = () => {
   const {

@@ -1,11 +1,10 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import {
-  BorrowedAsset,
-  useGetAssetsQuery,
-  useGetTaskByIdQuery,
-} from "@/state/api";
+
 import { CircularProgress } from "@mui/material";
+import { BorrowedAsset } from "@/types/borrowedAsset";
+import { useGetAssetsQuery } from "@/state/api/modules/assetApi";
+import { useGetTaskByIdQuery } from "@/state/api/modules/taskApi";
 
 interface BorrowedAssetDetailModalProps {
   open: boolean;
