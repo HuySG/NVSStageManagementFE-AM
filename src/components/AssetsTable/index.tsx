@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetAssetsQuery } from "@/state/api";
+import { useGetAssetsQuery } from "@/state/api/modules/assetApi";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Image from "next/image";
 

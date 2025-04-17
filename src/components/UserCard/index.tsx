@@ -1,4 +1,4 @@
-import { User } from "@/state/api";
+import { User } from "@/types/user";
 import Image from "next/image";
 import React from "react";
 
@@ -9,7 +9,7 @@ type Props = {
 const UserCard = ({ user }: Props) => {
   return (
     <div className="flex items-center rounded border p-4 shadow">
-      {user.profilePictureUrl && (
+      {user.pictureProfile && (
         <Image
           src={`/p1.jpeg`}
           alt="profile picture"
@@ -19,7 +19,7 @@ const UserCard = ({ user }: Props) => {
         />
       )}
       <div>
-        <h3>{user.username}</h3>
+        <h3>{user.fullName}</h3>
         <p>{user.email}</p>
       </div>
     </div>
