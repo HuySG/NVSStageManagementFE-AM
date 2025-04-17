@@ -64,6 +64,13 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       dispatch(setAuthData({ user: userInfo, token, expireTime: expireTime! }));
     }
   }, [userInfo, token, expireTime, dispatch]);
+  useEffect(() => {
+    console.log("pathname:", pathname);
+    console.log("token:", token);
+    console.log("expireTime:", expireTime);
+    console.log("userInfo:", userInfo);
+    console.log("isAuthenticated:", isAuthenticated);
+  }, [pathname, token, userInfo, expireTime, isAuthenticated]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -96,10 +103,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     dispatch(logoutUser());
     router.push("/login");
   };
-
-  if (!isAuthenticated && pathname !== "/login") {
-    return <div>Loading...</div>;
-  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
