@@ -1,7 +1,6 @@
 "use client";
 import { ReactNode, createContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { User } from "@/state/api";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser, setAuthData } from "@/state";
@@ -10,6 +9,7 @@ import {
   useLoginUserMutation,
 } from "@/state/api/modules/userApi";
 import { RootState } from "./redux";
+import { User } from "@/types/user";
 
 interface AuthContextType {
   user: User | null;
