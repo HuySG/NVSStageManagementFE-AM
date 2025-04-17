@@ -1,4 +1,4 @@
-name: Build and deploy static Next.js app to Azure Web App (Windows) - NVS-AM
+name: Build and deploy static Next.js app to Azure Web App - NVS-AM
 
 on:
   push:
@@ -7,22 +7,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20"
+          node-version: "20.x"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build and export static site
+      - name: Build Next.js app and export static site
         run: |
           npm run build
           npm run export
@@ -30,23 +30,22 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-static
-          path: ./out
+          name: nextjs-export
+          path: out
 
   deploy:
     runs-on: windows-latest
-    needs: build
-
+    needs: build-and-deploy
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: nextjs-static
+          name: nextjs-export
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "NVS-AM"
           slot-name: "Production"
-          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4F2E52E6CCF3457CAC122A0D41F6EC85 }}
+          package: .
