@@ -386,7 +386,14 @@ const HomePage = () => {
   );
 };
 
-const StatsCard = ({ title, value, change, icon }) => {
+interface StatsCardProps {
+  title: string;
+  value: string | number;
+  change: number;
+  icon: React.ReactNode;
+}
+
+const StatsCard = ({ title, value, change, icon }: StatsCardProps) => {
   const isPositive = change >= 0;
 
   return (
