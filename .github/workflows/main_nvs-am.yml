@@ -18,9 +18,11 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: Install dependencies and build project
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project (standalone mode)
         run: |
-          npm install
           npm run build
 
       - name: Prepare deployment package
@@ -29,8 +31,8 @@ jobs:
           cp -r .next/standalone/* deploy/
           cp -r .next/static deploy/.next/
           cp -r public deploy/public || echo "no public folder"
-          cp -r node_modules deploy/
           cp package.json deploy/
+          cd deploy && npm install --omit=dev
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
@@ -56,7 +58,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: "NVS-AM" # Thay bằng tên chính xác của Web App nếu khác
+          app-name: "NVS-AM"
           slot-name: "Production"
           package: deploy
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_04B79999B76F4060B3D457BD3A07626B }}
