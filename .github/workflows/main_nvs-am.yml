@@ -1,4 +1,4 @@
-name: Build and deploy Next.js app to Azure Web App - NVS-AM
+name: Build and deploy Next.js SSR app to Azure Web App - NVS-AM
 
 on:
   push:
@@ -29,9 +29,9 @@ jobs:
       - name: Build Next.js app
         run: npm run build
 
-      - name: Zip output for deployment
+      - name: Zip app for deployment
         run: |
-          zip -r release.zip .next public .env.production package.json package-lock.json node_modules
+          zip -r app.zip . -x "*.git*" "node_modules/*"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -39,4 +39,4 @@ jobs:
           app-name: "NVS-AM"
           slot-name: "Production"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4F2E52E6CCF3457CAC122A0D41F6EC85 }}
-          package: release.zip
+          package: app.zip
