@@ -9,18 +9,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20.x"
 
-      - name: Install dependencies and build
+      - name: Install dependencies and build project
         run: |
           npm install
           npm run build
@@ -30,11 +28,11 @@ jobs:
           mkdir -p deploy/.next
           cp -r .next/standalone/* deploy/
           cp -r .next/static deploy/.next/
-          cp -r public deploy/ || echo "no public folder"
+          cp -r public deploy/public || echo "no public folder"
           cp -r node_modules deploy/
           cp package.json deploy/
 
-      - name: Upload artifact
+      - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-app
@@ -48,7 +46,7 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download artifact
+      - name: Download deployment artifact
         uses: actions/download-artifact@v4
         with:
           name: nextjs-app
@@ -58,7 +56,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: "NVS-AM"
+          app-name: "NVS-AM" # Thay bằng tên chính xác của Web App nếu khác
           slot-name: "Production"
           package: deploy
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_04B79999B76F4060B3D457BD3A07626B }}
