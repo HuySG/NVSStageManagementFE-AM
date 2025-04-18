@@ -52,6 +52,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-app
+          path: deploy
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
