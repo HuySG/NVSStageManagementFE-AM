@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     domains: ["firebasestorage.googleapis.com", "example.com"],
     unoptimized: true, // 💥 QUAN TRỌNG nếu bạn dùng `next/image` và export static
   },
-  output: "export", // 💥 Đây là cách mới thay cho lệnh `next export`
+  output: "standalone", // rất quan trọng cho Azure App Service!
   trailingSlash: false, // 👍 Tốt cho static export trên Azure
   reactStrictMode: true,
   eslint: {
