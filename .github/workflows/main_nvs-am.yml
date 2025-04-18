@@ -1,4 +1,4 @@
-name: Build and deploy Next.js SSR app to Azure Web App - NVS-AM
+name: Build and deploy Next.js SSR app to Azure Web App
 
 on:
   push:
@@ -22,21 +22,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create .env.production file
-        run: |
-          echo "NEXT_PUBLIC_API_BASE_URL=https://nvs.azurewebsites.net/api/v1" > .env.production
+      - name: Create .env.production
+        run: echo "NEXT_PUBLIC_API_BASE_URL=https://nvs.azurewebsites.net/api/v1" > .env.production
 
-      - name: Build Next.js app
+      - name: Build project
         run: npm run build
 
-      - name: Zip app for deployment
-        run: |
-          zip -r app.zip . -x "*.git*" "node_modules/*"
+      - name: Zip project for deployment
+        run: zip -r build.zip . -x "*.git*" "node_modules/*" "build.zip"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: "NVS-AM"
+          app-name: "NVS-AM" # Tên Web App trên Azure
           slot-name: "Production"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4F2E52E6CCF3457CAC122A0D41F6EC85 }}
-          package: app.zip
+          package: build.zip
