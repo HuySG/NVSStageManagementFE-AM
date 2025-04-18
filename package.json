@@ -5,9 +5,10 @@
 "scripts": {
   "dev": "next dev",
   "build": "next build",
-  "start": "serve out",  
+  "start": "next start",  
   "lint": "next lint"
 }
+
 ,
   "dependencies": {
     "@emotion/react": "^11.14.0",

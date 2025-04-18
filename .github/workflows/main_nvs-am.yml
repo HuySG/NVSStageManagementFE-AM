@@ -1,4 +1,4 @@
-name: Build and deploy static Next.js app to Azure Web App - NVS-AM
+name: Build and deploy Next.js app to Azure Web App - NVS-AM
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -22,23 +22,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js app (auto-export)
+      - name: Create .env.production file
+        run: |
+          echo "NEXT_PUBLIC_API_BASE_URL=https://nvs.azurewebsites.net/api/v1" > .env.production
+
+      - name: Build Next.js app
         run: npm run build
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: nextjs-export
-          path: out
-
-  deploy:
-    runs-on: windows-latest
-    needs: build-and-deploy
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: nextjs-export
+      - name: Zip output for deployment
+        run: |
+          zip -r release.zip .next public .env.production package.json package-lock.json node_modules
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -46,4 +39,4 @@ jobs:
           app-name: "NVS-AM"
           slot-name: "Production"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4F2E52E6CCF3457CAC122A0D41F6EC85 }}
-          package: .
+          package: release.zip
