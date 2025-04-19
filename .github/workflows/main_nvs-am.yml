@@ -27,7 +27,7 @@ jobs:
       - name: 📦 Copy files to deploy folder
         run: |
           mkdir deploy
-          cp -r .next public package.json server.js next.config.js deploy/
+          cp -r .next public package.json server.js deploy/
           cd deploy && npm install --production
 
       - name: 🚀 Deploy to Azure Web App
