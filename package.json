@@ -5,10 +5,10 @@
 "scripts": {
   "dev": "next dev",
   "build": "next build",
-  "start": "NODE_ENV=production node server.js",  
+  "start": "NODE_ENV=production node server.js",
+  "postinstall": "next build",
   "lint": "next lint"
 }
-
 ,
   "dependencies": {
     "@emotion/react": "^11.14.0",
