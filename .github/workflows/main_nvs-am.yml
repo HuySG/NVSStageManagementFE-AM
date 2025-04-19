@@ -28,7 +28,8 @@ jobs:
       - name: 🧹 Clean up dev dependencies to reduce size
         run: |
           mkdir deploy
-          cp -r .next public package.json package-lock.json server.js next.config.js deploy/
+          cp -r .next public package.json package-lock.json server.js deploy/
+          if [ -f next.config.js ]; then cp next.config.js deploy/; fi
           cd deploy
           npm ci --omit=dev
 
