@@ -10,6 +10,7 @@ import {
 } from "@/state/api/modules/userApi";
 import { RootState } from "./redux";
 import { User } from "@/types/user";
+import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
   user: User | null;
@@ -27,55 +28,59 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated, token, expireTime } = useSelector(
     (state: RootState) => state.global,
   );
+
+  const [isLoading, setIsLoading] = useState(true); // 👈 trạng thái loading
   const [loginUser] = useLoginUserMutation();
-  const { data: userInfo, refetch } = useGetUserInfoQuery(undefined, {
+  const {
+    data: userInfo,
+    refetch,
+    isFetching,
+  } = useGetUserInfoQuery(undefined, {
     skip: !token,
   });
 
-  // Kiểm tra token và cập nhật auth data nếu token hợp lệ
+  // Xử lý xác thực khi có token
   useEffect(() => {
-    if (token && expireTime) {
-      const now = Date.now();
-      if (now > expireTime) {
-        dispatch(logoutUser());
-        router.push("/login");
-      } else {
-        if (!isAuthenticated && userInfo) {
-          dispatch(setAuthData({ user: userInfo, token, expireTime }));
+    const processAuth = async () => {
+      if (token && expireTime) {
+        const now = Date.now();
+        if (now > expireTime) {
+          dispatch(logoutUser());
+          router.push("/login");
+        } else {
+          if (!isAuthenticated && userInfo) {
+            dispatch(setAuthData({ user: userInfo, token, expireTime }));
+          }
+          setTimeout(() => dispatch(logoutUser()), expireTime - now);
         }
-        setTimeout(() => dispatch(logoutUser()), expireTime - now);
+      } else if (!token && pathname !== "/login") {
+        router.push("/login");
       }
-    } else if (!token && pathname !== "/login") {
-      router.push("/login");
-    }
+
+      setIsLoading(false); // ✅ kết thúc loading sau khi xử lý xong
+    };
+
+    processAuth();
   }, [
-    pathname,
     token,
-    userInfo,
     expireTime,
+    userInfo,
+    isAuthenticated,
+    pathname,
     dispatch,
     router,
-    isAuthenticated,
   ]);
 
-  // Cập nhật auth data khi có thông tin người dùng mới
   useEffect(() => {
     if (userInfo && token) {
       dispatch(setAuthData({ user: userInfo, token, expireTime: expireTime! }));
     }
   }, [userInfo, token, expireTime, dispatch]);
-  useEffect(() => {
-    console.log("pathname:", pathname);
-    console.log("token:", token);
-    console.log("expireTime:", expireTime);
-    console.log("userInfo:", userInfo);
-    console.log("isAuthenticated:", isAuthenticated);
-  }, [pathname, token, userInfo, expireTime, isAuthenticated]);
 
   const login = async (email: string, password: string) => {
     try {
       const res = await loginUser({ email, password }).unwrap();
-      const expire = Date.now() + 60 * 60 * 1000; // Token hết hạn sau 1 giờ
+      const expire = Date.now() + 60 * 60 * 1000;
 
       if (res.result.authenticated) {
         dispatch(
@@ -103,6 +108,16 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     dispatch(logoutUser());
     router.push("/login");
   };
+
+  // 👇 Loading UI trong AuthProvider
+  if (isLoading || isFetching) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+        <span className="ml-3 text-lg text-blue-500">Đang xác thực...</span>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>

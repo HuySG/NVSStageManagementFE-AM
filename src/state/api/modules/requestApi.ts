@@ -1,5 +1,8 @@
 import { AssetRequest } from "@/types/assetRequest";
 import { baseApi } from "../baseApi";
+import { CheckAvailabilityResult } from "@/types/checkAvailabilityResult";
+import { Asset } from "@/types/asset";
+import { AllocateAsset } from "@/types/AllocateAsset";
 
 export const requestApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -57,6 +60,28 @@ export const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["AssetRequests"],
     }),
+    getCheckAvailabilityResult: build.query<CheckAvailabilityResult, string>({
+      query: (requestId) => `request-asset/${requestId}/check-availability`,
+
+      providesTags: ["AssetRequests"],
+    }),
+
+    allocateAssets: build.mutation<
+      void,
+      { requestId: string; allocations: AllocateAsset[] }
+    >({
+      query: ({ requestId, allocations }) => ({
+        url: `request-asset/allocate-assets`,
+        method: "POST",
+        params: { requestId },
+        body: allocations,
+      }),
+      invalidatesTags: ["AssetRequests"],
+    }),
+
+    getAllocatedAssets: build.query<Asset[], string>({
+      query: (requestId) => `request-asset/${requestId}/allocated-assets`,
+    }),
   }),
   overrideExisting: false,
 });
@@ -75,4 +100,10 @@ export const {
   useAcceptBookingRequestMutation,
   //acceptAssetRequest
   useAcceptAssetRequestMutation,
+  //getCheckAvailabilityResult
+  useGetCheckAvailabilityResultQuery,
+  //allocateAssets
+  useAllocateAssetsMutation,
+  //getAllocatedAssets
+  useGetAllocatedAssetsQuery,
 } = requestApi;

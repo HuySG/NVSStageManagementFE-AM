@@ -1,409 +1,164 @@
 "use client";
 
-import React, { useState } from "react";
-
-import { Card, CardContent } from "@/components/ui/card";
-import { useAppSelector } from "@/app/redux";
-import { Button, CircularProgress } from "@mui/material";
-import { toast } from "react-toastify";
-import { useGetUserInfoQuery } from "@/state/api/modules/userApi";
-import {
-  useAcceptAssetRequestMutation,
-  useAcceptBookingRequestMutation,
-  useGetAssetRequestsForManagerQuery,
-  useUpdateAssetStatusMutation,
-} from "@/state/api/modules/requestApi";
-import { useGetBorrowedAssetsQuery } from "@/state/api/modules/borrowAssetApi";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useGetAssetRequestsForManagerQuery } from "@/state/api/modules/requestApi";
 import { AssetRequest } from "@/types/assetRequest";
+import { SearchIcon } from "lucide-react";
 
-const statusMapping: Record<string, string> = {
-  PENDING_LEADER: "Pending Leader Approval",
-  LEADER_APPROVED: "Leader Approved, Pending AM",
-  LEADER_REJECTED: "Leader Rejected",
-  PENDING_AM: "Pending Asset Manager Approval",
-  AM_APPROVED: "Asset Manager Approved",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
-};
+const RequestProjectPage = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [newRequests, setNewRequests] = useState<boolean>(false); // Trạng thái thông báo mới
 
-const RequestAMPage = () => {
   const {
     data = [],
     isLoading,
-    error,
-    refetch,
+    isError,
   } = useGetAssetRequestsForManagerQuery();
-  const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
-  const [loadingRequestId, setLoadingRequestId] = useState<string | null>(null);
-  const [acceptBookingRequest] = useAcceptBookingRequestMutation();
-  const [updateRequestStatus] = useUpdateAssetStatusMutation();
-  const { data: user } = useGetUserInfoQuery();
-  const [acceptAssetRequest] = useAcceptAssetRequestMutation();
-  const { data: borrowedAssets } = useGetBorrowedAssetsQuery();
 
-  const isAssetAvailable = (assetId: string) => {
-    if (!borrowedAssets) return true;
-    return !borrowedAssets.some(
-      (b) =>
-        b.assetID === assetId && b.status?.toUpperCase().trim() === "IN_USE",
-    );
-  };
+  // Kiểm tra khi có yêu cầu mới
+  useEffect(() => {
+    if (data.length > 0) {
+      const pendingRequests = data.filter((r) => r.status === "PENDING_AM");
+      const lastRequest = pendingRequests[pendingRequests.length - 1];
+      const storedLastRequestId = localStorage.getItem("lastRequestId");
 
-  const handleApprove = async (request: AssetRequest) => {
-    try {
-      setLoadingRequestId(request.requestId);
-
-      if (request.asset) {
-        // Booking-based
-        await acceptBookingRequest({
-          requestId: request.requestId,
-          userId: user?.id ?? "",
-        }).unwrap();
+      // Kiểm tra nếu có yêu cầu mới
+      if (
+        !storedLastRequestId ||
+        lastRequest?.requestId !== storedLastRequestId
+      ) {
+        setNewRequests(true);
+        localStorage.setItem("lastRequestId", lastRequest?.requestId ?? "");
       } else {
-        // Category-based
-        await acceptAssetRequest(request.requestId).unwrap();
+        setNewRequests(false);
       }
-
-      toast.success("Approved successfully!");
-    } catch (error) {
-      toast.error("Approval failed!");
-    } finally {
-      setLoadingRequestId(null);
     }
-  };
+  }, [data]);
 
-  const handleReject = async (requestId: string) => {
-    try {
-      setLoadingRequestId(requestId);
-      await updateRequestStatus({
-        requestId,
-        status: "REJECTED",
-        approverId: user?.id!,
-      }).unwrap();
-      toast.success("Request rejected successfully");
-      await refetch();
-    } catch (err) {
-      console.error("Rejection failed", err);
-      toast.error("Failed to reject request");
-    } finally {
-      setLoadingRequestId(null);
-    }
-  };
-
-  const requests = data.filter(
-    (request: AssetRequest) => request.status === "PENDING_AM",
-  );
-
-  const groupedByProjectAndDepartment: Record<
-    string,
-    {
-      projectTitle: string;
-      departments: Record<
-        string,
-        {
-          departmentName: string;
-          requests: AssetRequest[];
-        }
-      >;
-    }
-  > = {};
-
-  requests.forEach((request) => {
-    const projectId = request.projectInfo?.projectID ?? "unknown_project";
-    const projectTitle = request.projectInfo?.title ?? "Unknown Project";
-    const departmentId =
-      request.requesterInfo?.department?.id ?? "unknown_department";
-    const departmentName =
-      request.requesterInfo?.department?.name ?? "Unknown Department";
-
-    if (!groupedByProjectAndDepartment[projectId]) {
-      groupedByProjectAndDepartment[projectId] = {
-        projectTitle,
-        departments: {},
-      };
-    }
-
-    if (!groupedByProjectAndDepartment[projectId].departments[departmentId]) {
-      groupedByProjectAndDepartment[projectId].departments[departmentId] = {
-        departmentName,
-        requests: [],
-      };
-    }
-
-    groupedByProjectAndDepartment[projectId].departments[
-      departmentId
-    ].requests.push(request);
-  });
-
-  if (isLoading) return <div className="p-4 text-center">Loading...</div>;
-  if (error)
+  if (isLoading)
     return (
-      <div className="p-4 text-center text-red-500">
-        Error loading requests.
+      <div className="flex items-center justify-center p-8">
+        <div className="text-xl text-gray-500">🔄 Loading requests...</div>
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="p-6 font-semibold text-red-500">
+        ❌ Error loading data. Please try again later!
       </div>
     );
 
+  // Filter pending requests
+  const pendingRequests: AssetRequest[] = data.filter(
+    (r) => r.status === "PENDING_AM",
+  );
+
+  // Group by project
+  const projectMap: Record<string, { projectTitle: string; count: number }> =
+    {};
+
+  pendingRequests.forEach((r) => {
+    const id = r.projectInfo?.projectID ?? "unknown";
+    const title = r.projectInfo?.title ?? "Unknown Project";
+
+    if (!projectMap[id]) {
+      projectMap[id] = { projectTitle: title, count: 0 };
+    }
+
+    projectMap[id].count += 1;
+  });
+
+  const projects = Object.entries(projectMap);
+
+  // Filter by project title
+  const filteredProjects = projects.filter(([_, { projectTitle }]) =>
+    projectTitle.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  // Filter by status (if selected)
+  const finalFilteredProjects = filteredProjects.filter(
+    ([_, { projectTitle }]) => {
+      if (filterStatus) {
+        return projectTitle.includes(filterStatus);
+      }
+      return true;
+    },
+  );
+
   return (
-    <div
-      className={`p-6 ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}
-    >
-      <h1 className="mb-6 text-center text-3xl font-bold">
-        Asset Manager Approval
-      </h1>
+    <div className="p-6">
+      {/* Header with Search and Filter */}
+      <div className="mb-6 flex flex-col border-b pb-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-2xl font-semibold">
+          List of Projects with Asset Requests
+        </h1>
 
-      {Object.entries(groupedByProjectAndDepartment).map(
-        ([projectId, { projectTitle, departments }]) => (
-          <div key={projectId} className="mb-10">
-            <h2 className="mb-4 text-2xl font-bold">Project: {projectTitle}</h2>
-
-            {Object.entries(departments).map(
-              ([departmentId, { departmentName, requests }]) => {
-                const assetBased = requests.filter((r) => r.asset !== null);
-                const categoryBased = requests.filter((r) => r.asset === null);
-
-                return (
-                  <div
-                    key={departmentId}
-                    className="mb-6 border-l-4 border-blue-400 pl-4"
-                  >
-                    <h3 className="mb-2 text-xl font-semibold text-blue-700">
-                      Department: {departmentName}
-                    </h3>
-
-                    {/* Asset-Based Requests */}
-                    {assetBased.length > 0 && (
-                      <Card className="mb-6">
-                        <CardContent>
-                          <h3 className="mb-4 text-xl font-bold">
-                            Asset-Based Requests
-                          </h3>
-                          <div className="overflow-x-auto">
-                            <table className="w-full border text-sm">
-                              <thead>
-                                <tr className="bg-gray-200">
-                                  <th className="p-2">Description</th>
-                                  <th className="p-2">Status</th>
-                                  <th className="p-2">Asset</th>
-                                  <th className="p-2">Task</th>
-                                  <th className="p-2">Time</th>
-                                  <th className="p-2">Requester</th>
-                                  <th className="p-2">Leader Approved</th>
-                                  <th className="p-2">Leader Time</th>
-                                  <th className="p-2">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {assetBased.map((r) => (
-                                  <tr key={r.requestId} className="border-t">
-                                    <td className="p-2">{r.description}</td>
-                                    <td className="p-2">
-                                      {statusMapping[r.status]}
-                                    </td>
-                                    <td className="p-2">
-                                      {r.asset?.assetName}
-                                    </td>
-                                    <td className="p-2">{r.task?.title}</td>
-                                    <td className="p-2">
-                                      <div>
-                                        <strong>Start:</strong>{" "}
-                                        {new Date(r.startTime).toLocaleString(
-                                          "vi-VN",
-                                          {
-                                            weekday: "short",
-                                            year: "numeric",
-                                            month: "numeric",
-                                            day: "numeric",
-                                            hour: "numeric",
-                                            minute: "numeric",
-                                            second: "numeric",
-                                            hour12: false, // Nếu muốn hiển thị 24 giờ
-                                          },
-                                        )}
-                                      </div>
-                                      <div>
-                                        <strong>End:</strong>{" "}
-                                        {new Date(r.endTime).toLocaleString(
-                                          "vi-VN",
-                                          {
-                                            weekday: "short",
-                                            year: "numeric",
-                                            month: "numeric",
-                                            day: "numeric",
-                                            hour: "numeric",
-                                            minute: "numeric",
-                                            second: "numeric",
-                                            hour12: false, // Nếu muốn hiển thị 24 giờ
-                                          },
-                                        )}
-                                      </div>
-                                    </td>
-                                    <td className="p-2">
-                                      {r.requesterInfo?.fullName}
-                                    </td>
-                                    <td className="p-2">
-                                      {r.approvedByDLName}
-                                    </td>
-                                    <td className="p-2">
-                                      {new Date(
-                                        r.approvedByDLTime,
-                                      ).toLocaleString("vi-VN", {
-                                        weekday: "short",
-                                        year: "numeric",
-                                        month: "numeric",
-                                        day: "numeric",
-                                        hour: "numeric",
-                                        minute: "numeric",
-                                        second: "numeric",
-                                        hour12: false, // Nếu muốn định dạng 24 giờ
-                                      })}
-                                    </td>
-
-                                    <td className="space-x-2 p-2">
-                                      <div className="flex flex-col items-start gap-1">
-                                        <Button
-                                          variant="outlined"
-                                          size="small"
-                                          color="success"
-                                          onClick={() => handleApprove(r)}
-                                          disabled={
-                                            !r.asset ||
-                                            !isAssetAvailable(r.asset.assetID)
-                                          }
-                                        >
-                                          {loadingRequestId === r.requestId ? (
-                                            <CircularProgress size={16} />
-                                          ) : (
-                                            "Approve"
-                                          )}
-                                        </Button>
-                                        {!r.asset ||
-                                          (!isAssetAvailable(
-                                            r.asset.assetID,
-                                          ) && (
-                                            <span className="text-xs text-red-500">
-                                              Asset is currently borrowed
-                                            </span>
-                                          ))}
-                                      </div>
-                                      <Button
-                                        variant="outlined"
-                                        size="small"
-                                        color="error"
-                                        onClick={() =>
-                                          handleReject(r.requestId)
-                                        }
-                                      >
-                                        Reject
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Category-Based Requests */}
-                    {categoryBased.length > 0 && (
-                      <Card>
-                        <CardContent>
-                          <h3 className="mb-4 text-xl font-bold">
-                            Category-Based Requests
-                          </h3>
-                          <div className="overflow-x-auto">
-                            <table className="w-full border text-sm">
-                              <thead>
-                                <tr className="bg-gray-200">
-                                  <th className="p-2">Description</th>
-                                  <th className="p-2">Status</th>
-                                  <th className="p-2">Asset</th>
-                                  <th className="p-2">Task</th>
-                                  <th className="p-2">Time</th>
-                                  <th className="p-2">Requester</th>
-                                  <th className="p-2">Leader Approved</th>
-                                  <th className="p-2">Leader Time</th>
-                                  <th className="p-2">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {categoryBased.map((r) => (
-                                  <tr key={r.requestId} className="border-t">
-                                    <td className="p-2">{r.description}</td>
-
-                                    <td className="p-2">
-                                      <ul className="list-disc pl-5 text-sm text-gray-600">
-                                        {r.categories?.map((cat) => (
-                                          <li key={cat.categoryID}>
-                                            {cat.name} (x{cat.quantity})
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </td>
-
-                                    <td className="p-2">
-                                      {statusMapping[r.status]}
-                                    </td>
-                                    <td className="p-2">
-                                      <div>
-                                        <strong>Start:</strong>{" "}
-                                        {new Date(
-                                          r.startTime,
-                                        ).toLocaleDateString()}
-                                      </div>
-                                      <div>
-                                        <strong>End:</strong>{" "}
-                                        {new Date(
-                                          r.endTime,
-                                        ).toLocaleDateString()}
-                                      </div>
-                                    </td>
-                                    <td className="p-2">{r.task?.title}</td>
-                                    <td className="p-2">
-                                      {r.requesterInfo?.fullName}
-                                    </td>
-                                    <td className="space-x-2 p-2">
-                                      <Button
-                                        variant="outlined"
-                                        size="small"
-                                        color="success"
-                                        onClick={() => handleApprove(r)}
-                                      >
-                                        {loadingRequestId === r.requestId ? (
-                                          <CircularProgress size={16} />
-                                        ) : (
-                                          "Approve"
-                                        )}
-                                      </Button>
-                                      <Button
-                                        variant="outlined"
-                                        size="small"
-                                        color="error"
-                                        onClick={() =>
-                                          handleReject(r.requestId)
-                                        }
-                                      >
-                                        Reject
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                );
-              },
-            )}
+        <div className="mt-4 flex items-center md:mt-0">
+          {/* Search */}
+          <div className="flex items-center rounded-md border border-gray-300 px-4 py-2">
+            <SearchIcon className="mr-2 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search project..."
+              className="border-none bg-transparent text-gray-700 outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-        ),
+
+          {/* Filter */}
+          <select
+            className="ml-4 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-indigo-300"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      {newRequests && (
+        <div className="mb-6 flex items-center justify-between rounded-md bg-yellow-100 p-4 text-yellow-800">
+          <span>📢 New asset request(s) are waiting for approval!</span>
+          <button
+            onClick={() => setNewRequests(false)}
+            className="rounded-md bg-yellow-500 p-2 text-white"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {finalFilteredProjects.length === 0 ? (
+        <p className="text-gray-600">
+          Currently, there are no requests pending approval.
+        </p>
+      ) : (
+        <ul className="space-y-4">
+          {finalFilteredProjects.map(([projectId, { projectTitle, count }]) => (
+            <li key={projectId}>
+              <Link
+                href={`/requests/${projectId}`}
+                className="block rounded-lg border border-gray-300 p-4 transition hover:bg-gray-50"
+              >
+                <div className="text-lg font-semibold text-gray-800">
+                  {projectTitle}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {count} requests pending approval
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
 };
 
-export default RequestAMPage;
+export default RequestProjectPage;
