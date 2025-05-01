@@ -51,6 +51,25 @@ export const taskApi = baseApi.injectEndpoints({
       query: (taskId) => `tasks/taskId?taskId=${taskId}`,
       providesTags: ["Tasks"],
     }),
+    getTasksByProjectId: build.query<Task[], string>({
+      query: (projectId) => `/tasks/by-project/${projectId}`,
+      providesTags: ["Tasks"],
+    }),
+    getTasksByDepartment: build.query<Task[], string>({
+      query: (departmentId) => `/tasks/department/${departmentId}`,
+      providesTags: ["Tasks"],
+    }),
+    createPreparationTask: build.mutation<
+      Task,
+      { requestId: string; createBy: string }
+    >({
+      query: ({ requestId, createBy }) => ({
+        url: `request/${requestId}/prepare-task`,
+        method: "POST",
+        params: { createBy },
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -67,4 +86,10 @@ export const {
   useUpdateTaskMutation,
   //getTaskById
   useGetTaskByIdQuery,
+  //getTasksByProjectId
+  useGetTasksByProjectIdQuery,
+  //getTasksByDepartment
+  useGetTasksByDepartmentQuery,
+  //createPreparationTask
+  useCreatePreparationTaskMutation,
 } = taskApi;

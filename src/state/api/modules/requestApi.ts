@@ -3,6 +3,7 @@ import { baseApi } from "../baseApi";
 import { CheckAvailabilityResult } from "@/types/checkAvailabilityResult";
 import { Asset } from "@/types/asset";
 import { AllocateAsset } from "@/types/AllocateAsset";
+import { Task } from "@/types/task";
 
 export const requestApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -81,6 +82,7 @@ export const requestApi = baseApi.injectEndpoints({
 
     getAllocatedAssets: build.query<Asset[], string>({
       query: (requestId) => `request-asset/${requestId}/allocated-assets`,
+      providesTags: ["AssetRequests"],
     }),
   }),
   overrideExisting: false,

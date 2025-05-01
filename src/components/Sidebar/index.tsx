@@ -11,6 +11,7 @@ import {
   Home,
   Layers3,
   LockIcon,
+  LucideChartNoAxesGantt,
   LucideIcon,
   ScrollText,
   Search,
@@ -76,7 +77,11 @@ const Sidebar = () => {
           <SidebarLink icon={Search} label="Search" href="/search" />
           <SidebarLink icon={Settings} label="Settings" href="/settings" />
           <SidebarLink icon={User} label="Users" href="/users" />
-          <SidebarLink icon={Users} label="Teams" href="/teams" />
+          <SidebarLink
+            icon={LucideChartNoAxesGantt}
+            label="Tasks"
+            href="/tasks"
+          />
           <SidebarLink icon={ScrollText} label="Requests" href="/requests" />
           <SidebarLink icon={Warehouse} label="Assets" href="/assets" />
           <SidebarLink

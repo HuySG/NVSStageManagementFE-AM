@@ -7,19 +7,34 @@ import {
   useGetAllocatedAssetsQuery,
 } from "@/state/api/modules/requestApi";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { useCreatePreparationTaskMutation } from "@/state/api/modules/taskApi";
+import { useGetUserInfoQuery } from "@/state/api/modules/userApi";
 
 interface ManualAssetAllocationSectionProps {
   requestId: string;
+  projectId: string;
+  departmentId: string;
   availableAssets: Asset[];
+  requestedQuantities: Record<string, number>; // 👈 Add this prop (categoryId -> required qty)
 }
 
 const ManualAssetAllocationSection: React.FC<
   ManualAssetAllocationSectionProps
-> = ({ requestId, availableAssets }) => {
+> = ({
+  requestId,
+  projectId,
+  departmentId,
+  availableAssets,
+  requestedQuantities,
+}) => {
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [allocateAssets, { isLoading }] = useAllocateAssetsMutation();
+  const [createPreparationTask] = useCreatePreparationTaskMutation();
+  const { data: user } = useGetUserInfoQuery();
   const { data: allocatedAssets, refetch } =
     useGetAllocatedAssetsQuery(requestId);
+  const router = useRouter();
 
   const handleToggleSelect = (assetId: string) => {
     setSelectedAssets((prev) =>
@@ -35,40 +50,67 @@ const ManualAssetAllocationSection: React.FC<
       return;
     }
 
-    // ✅ Nhóm theo categoryID
-    const categoryMap: Record<string, string[]> = {};
+    const selectedByCategory: Record<string, string[]> = {};
 
     selectedAssets.forEach((assetId) => {
       const asset = availableAssets.find((a) => a.assetID === assetId);
       const categoryId = asset?.category?.categoryID;
       if (!categoryId) return;
 
-      if (!categoryMap[categoryId]) {
-        categoryMap[categoryId] = [];
-      }
-      categoryMap[categoryId].push(assetId);
+      if (!selectedByCategory[categoryId]) selectedByCategory[categoryId] = [];
+      selectedByCategory[categoryId].push(assetId);
     });
 
-    // ✅ Chuẩn bị dữ liệu gửi
-    const allocations = Object.entries(categoryMap).map(
-      ([categoryID, allocatedAssetIDs]) => ({
-        categoryID,
+    const sufficientAllocations = Object.entries(selectedByCategory)
+      .filter(([categoryId, selected]) => {
+        const required = requestedQuantities[categoryId];
+        return selected.length >= required;
+      })
+      .map(([categoryId, allocatedAssetIDs]) => ({
+        categoryID: categoryId,
         allocatedAssetIDs,
-      }),
+      }));
+
+    const skippedCategories = Object.entries(selectedByCategory).filter(
+      ([categoryId, selected]) => {
+        const required = requestedQuantities[categoryId];
+        return selected.length < required;
+      },
     );
 
+    if (sufficientAllocations.length === 0) {
+      toast.error(
+        "No category meets full required quantity. Allocation aborted.",
+      );
+      return;
+    }
+
     try {
-      await allocateAssets({ requestId, allocations }).unwrap();
-      toast.success("Assets allocated successfully!");
-      setSelectedAssets([]);
-      refetch();
-    } catch (error) {
-      console.error("Allocation failed:", error);
-      toast.error("Failed to allocate assets.");
-      console.log("Sending allocation:", {
+      await allocateAssets({
         requestId,
-        allocations,
-      });
+        allocations: sufficientAllocations,
+      }).unwrap();
+      toast.success("Assets allocated successfully!");
+
+      await createPreparationTask({
+        requestId,
+        createBy: user?.id ?? "",
+      }).unwrap();
+      toast.success("Preparation task created successfully!");
+
+      toast.success("Preparation task created successfully!");
+
+      if (skippedCategories.length > 0) {
+        const catNames = skippedCategories.map(([catId]) => catId).join(", ");
+        toast.warning(
+          `Skipped categories due to insufficient assets: ${catNames}`,
+        );
+      }
+
+      router.push(`/tasks/${projectId}`);
+    } catch (error) {
+      console.error("Allocation or task creation failed:", error);
+      toast.error("Failed to allocate assets or create preparation task.");
     }
   };
 
@@ -109,11 +151,10 @@ const ManualAssetAllocationSection: React.FC<
           disabled={isLoading}
           className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:opacity-50"
         >
-          {isLoading ? "Allocating..." : "Allocate Now"}
+          {isLoading ? "Allocating..." : "Allocate & Create Task"}
         </button>
       )}
 
-      {/* Already allocated assets */}
       {allocatedAssets && allocatedAssets.length > 0 && (
         <div className="mt-8">
           <h3 className="mb-2 font-medium text-gray-800">Allocated Assets:</h3>

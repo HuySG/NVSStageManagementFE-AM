@@ -10,6 +10,7 @@ import {
 import { format } from "date-fns";
 import ManualAssetAllocationSection from "@/components/ManualAssetAllocationSection";
 import CheckAvailabilityDisplay from "@/components/CheckAvailability";
+import { buildRequestedQuantitiesFromCheckResult } from "@/app/lib/utils";
 
 const RequestDetailPage = () => {
   const { requestId, projectId, departmentId } = useParams();
@@ -17,6 +18,7 @@ const RequestDetailPage = () => {
   const { data: result } = useGetCheckAvailabilityResultQuery(
     requestId as string,
   );
+  const requestedQuantities = buildRequestedQuantitiesFromCheckResult(result!);
 
   const request = allRequests.find((r) => r.requestId === requestId);
   const isCategoryRequest = request && !request.asset;
@@ -138,7 +140,10 @@ const RequestDetailPage = () => {
             result.availableAssets && result.availableAssets.length > 0 ? (
               <ManualAssetAllocationSection
                 requestId={requestId as string}
+                projectId={projectId as string}
+                departmentId={departmentId as string}
                 availableAssets={result.availableAssets}
+                requestedQuantities={requestedQuantities}
               />
             ) : (
               <div className="mt-6 text-sm italic text-gray-600">

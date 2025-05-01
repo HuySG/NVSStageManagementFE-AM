@@ -1,5 +1,6 @@
 import { AssetRequest } from "@/types/assetRequest";
 import { BorrowedAsset } from "@/types/borrowedAsset";
+import { CheckAvailabilityResult } from "@/types/checkAvailabilityResult";
 
 export const dataGridClassNames =
   "border border-gray-200 bg-white shadow dark:border-stroke-dark dark:bg-dark-secondary dark:text-gray-200";
@@ -77,3 +78,29 @@ export function groupAssetsByProjectAndDepartment(
 
   return grouped;
 }
+
+export const buildRequestedQuantitiesFromCheckResult = (
+  result: CheckAvailabilityResult | undefined,
+): Record<string, number> => {
+  const quantities: Record<string, number> = {};
+  if (!result) return quantities;
+
+  result.availableAssets?.forEach((asset) => {
+    const catId = asset.category?.categoryID;
+    if (!catId) return;
+    quantities[catId] = (quantities[catId] || 0) + 1;
+  });
+
+  // 💡 Bảo vệ chắc chắn kiểu mảng
+  const missingCats = Array.isArray(result.missingCategories)
+    ? result.missingCategories
+    : [];
+
+  missingCats.forEach((cat) => {
+    if (!quantities[cat.categoryId]) {
+      quantities[cat.categoryId] = cat.requestedQuantity;
+    }
+  });
+
+  return quantities;
+};
