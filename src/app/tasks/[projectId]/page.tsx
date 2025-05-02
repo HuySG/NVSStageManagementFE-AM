@@ -5,9 +5,14 @@ import { useParams } from "next/navigation";
 import { useGetTasksByDepartmentQuery } from "@/state/api/modules/taskApi";
 import { useGetUserInfoQuery } from "@/state/api/modules/userApi";
 import { Card, CardContent } from "@/components/ui/card";
+import { log } from "console";
 
 const ProjectTasksPage = () => {
   const { projectId } = useParams();
+  const projectIdStr = Array.isArray(projectId)
+    ? projectId[0]
+    : (projectId ?? "");
+
   const { data: user } = useGetUserInfoQuery();
   const departmentId = user?.department?.id;
 
@@ -20,8 +25,10 @@ const ProjectTasksPage = () => {
   });
 
   const projectTasks = tasks.filter(
-    (task) => task.projectID?.projectID === projectId,
+    (task) => task.projectID?.projectID === projectIdStr,
   );
+  console.log("departmentId:", departmentId); // giá trị phải khác undefined
+  console.log("user:", user); // phải chứa department.id
 
   if (!departmentId)
     return <div className="p-4 text-center">Missing department ID</div>;
