@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { SearchIcon } from "lucide-react";
 import { useGetAssetRequestsForManagerQuery } from "@/state/api/modules/requestApi";
 import { AssetRequest } from "@/types/assetRequest";
-import { SearchIcon } from "lucide-react";
 
 const RequestProjectPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("");
-  const [newRequests, setNewRequests] = useState<boolean>(false); // Trạng thái thông báo mới
+  const [newRequests, setNewRequests] = useState(false);
 
   const {
     data = [],
@@ -17,145 +16,102 @@ const RequestProjectPage = () => {
     isError,
   } = useGetAssetRequestsForManagerQuery();
 
-  // Kiểm tra khi có yêu cầu mới
   useEffect(() => {
-    if (data.length > 0) {
-      const pendingRequests = data.filter((r) => r.status === "PENDING_AM");
-      const lastRequest = pendingRequests[pendingRequests.length - 1];
-      const storedLastRequestId = localStorage.getItem("lastRequestId");
+    const pending = data.filter((r) => r.status === "PENDING_AM");
+    const lastRequest = pending[pending.length - 1];
+    const storedId = localStorage.getItem("lastRequestId");
 
-      // Kiểm tra nếu có yêu cầu mới
-      if (
-        !storedLastRequestId ||
-        lastRequest?.requestId !== storedLastRequestId
-      ) {
-        setNewRequests(true);
-        localStorage.setItem("lastRequestId", lastRequest?.requestId ?? "");
-      } else {
-        setNewRequests(false);
-      }
+    if (!storedId || lastRequest?.requestId !== storedId) {
+      setNewRequests(true);
+      localStorage.setItem("lastRequestId", lastRequest?.requestId ?? "");
+    } else {
+      setNewRequests(false);
     }
   }, [data]);
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-xl text-gray-500">🔄 Loading requests...</div>
-      </div>
+      <div className="p-8 text-center text-gray-500">Loading requests...</div>
     );
   if (isError)
     return (
-      <div className="p-6 font-semibold text-red-500">
-        ❌ Error loading data. Please try again later!
+      <div className="p-6 text-center text-red-500">
+        ❌ Failed to load requests.
       </div>
     );
 
-  // Filter pending requests
   const pendingRequests: AssetRequest[] = data.filter(
     (r) => r.status === "PENDING_AM",
   );
 
-  // Group by project
-  const projectMap: Record<string, { projectTitle: string; count: number }> =
-    {};
-
-  pendingRequests.forEach((r) => {
-    const id = r.projectInfo?.projectID ?? "unknown";
-    const title = r.projectInfo?.title ?? "Unknown Project";
-
-    if (!projectMap[id]) {
-      projectMap[id] = { projectTitle: title, count: 0 };
-    }
-
-    projectMap[id].count += 1;
-  });
-
-  const projects = Object.entries(projectMap);
-
-  // Filter by project title
-  const filteredProjects = projects.filter(([_, { projectTitle }]) =>
-    projectTitle.toLowerCase().includes(searchQuery.toLowerCase()),
+  const grouped = pendingRequests.reduce(
+    (acc, request) => {
+      const id = request.projectInfo?.projectID ?? "unknown";
+      const title = request.projectInfo?.title ?? "Unknown Project";
+      if (!acc[id]) acc[id] = { projectTitle: title, count: 0 };
+      acc[id].count += 1;
+      return acc;
+    },
+    {} as Record<string, { projectTitle: string; count: number }>,
   );
 
-  // Filter by status (if selected)
-  const finalFilteredProjects = filteredProjects.filter(
-    ([_, { projectTitle }]) => {
-      if (filterStatus) {
-        return projectTitle.includes(filterStatus);
-      }
-      return true;
-    },
+  const filteredProjects = Object.entries(grouped).filter(
+    ([_, { projectTitle }]) =>
+      projectTitle.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
-    <div className="p-6">
-      {/* Header with Search and Filter */}
-      <div className="mb-6 flex flex-col border-b pb-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-semibold">
-          List of Projects with Asset Requests
+    <div className="p-8">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Asset Requests by Project
         </h1>
 
-        <div className="mt-4 flex items-center md:mt-0">
-          {/* Search */}
-          <div className="flex items-center rounded-md border border-gray-300 px-4 py-2">
-            <SearchIcon className="mr-2 text-gray-500" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center rounded-md border border-gray-300 px-3 py-2 shadow-sm">
+            <SearchIcon className="mr-2 h-4 w-4 text-gray-500" />
             <input
               type="text"
               placeholder="Search project..."
-              className="border-none bg-transparent text-gray-700 outline-none"
+              className="w-48 bg-transparent text-sm outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Filter */}
-          <select
-            className="ml-4 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-indigo-300"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </select>
         </div>
       </div>
 
       {newRequests && (
-        <div className="mb-6 flex items-center justify-between rounded-md bg-yellow-100 p-4 text-yellow-800">
-          <span>📢 New asset request(s) are waiting for approval!</span>
+        <div className="mb-6 flex items-center justify-between rounded-md bg-yellow-100 p-4 text-yellow-800 shadow">
+          <span>📢 New asset requests pending approval!</span>
           <button
             onClick={() => setNewRequests(false)}
-            className="rounded-md bg-yellow-500 p-2 text-white"
+            className="rounded bg-yellow-500 px-3 py-1 text-white hover:bg-yellow-600"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      {finalFilteredProjects.length === 0 ? (
-        <p className="text-gray-600">
-          Currently, there are no requests pending approval.
-        </p>
+      {filteredProjects.length === 0 ? (
+        <div className="text-center text-gray-500">No requests found.</div>
       ) : (
-        <ul className="space-y-4">
-          {finalFilteredProjects.map(([projectId, { projectTitle, count }]) => (
-            <li key={projectId}>
-              <Link
-                href={`/requests/${projectId}`}
-                className="block rounded-lg border border-gray-300 p-4 transition hover:bg-gray-50"
-              >
-                <div className="text-lg font-semibold text-gray-800">
-                  {projectTitle}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {count} requests pending approval
-                </div>
-              </Link>
-            </li>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {filteredProjects.map(([projectId, { projectTitle, count }]) => (
+            <Link
+              key={projectId}
+              href={`/requests/${projectId}`}
+              className="group rounded-xl border border-gray-200 bg-white p-6 shadow transition hover:border-blue-400 hover:shadow-md"
+            >
+              <div className="text-xl font-semibold text-gray-800 group-hover:text-blue-700">
+                {projectTitle}
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {count} pending request{count > 1 ? "s" : ""}
+              </p>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

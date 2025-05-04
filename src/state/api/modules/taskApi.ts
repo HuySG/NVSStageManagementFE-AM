@@ -70,6 +70,19 @@ export const taskApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Tasks"],
     }),
+    getPrepareTasksByProjectId: build.query<Task[], string>({
+      query: (projectId) => `tasks/prepare/by-project/${projectId}`,
+      providesTags: ["Tasks"],
+    }),
+    deleteTask: build.mutation<{ success: boolean }, string>({
+      query: (taskId) => ({
+        url: `tasks/${taskId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, taskId) => [
+        { type: "Tasks", id: taskId },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -92,4 +105,8 @@ export const {
   useGetTasksByDepartmentQuery,
   //createPreparationTask
   useCreatePreparationTaskMutation,
+  //getPrepareTasksByProjectId
+  useGetPrepareTasksByProjectIdQuery,
+  //deleteTask
+  useDeleteTaskMutation,
 } = taskApi;
