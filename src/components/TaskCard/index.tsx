@@ -1,53 +1,109 @@
+"use client";
+
 import { Task } from "@/types/task";
-import { Status } from "@/types/status";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge"; // nếu bạn dùng shadcn/ui
-import { cn } from "@/lib/utils"; // hàm kết hợp className
+import { Circle, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TaskCardProps {
   task: Task;
   onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-const statusStyleMap: Record<Status, string> = {
-  ToDo: "border-blue-500 bg-blue-100",
-  WorkInProgress: "border-yellow-500 bg-yellow-100",
-  UnderReview: "border-purple-500 bg-purple-100",
-  Completed: "border-green-500 bg-green-100",
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "ToDo":
+      return "bg-gray-400";
+    case "WorkInProgress":
+      return "bg-yellow-500";
+    case "UnderReview":
+      return "bg-blue-500";
+    case "Completed":
+      return "bg-green-500";
+    default:
+      return "bg-gray-300";
+  }
 };
 
-export default function TaskCard({ task, onClick }: TaskCardProps) {
-  const formattedStart = task.startDate
-    ? format(new Date(task.startDate), "dd/MM/yyyy")
-    : "N/A";
-  const formattedEnd = task.endDate
-    ? format(new Date(task.endDate), "dd/MM/yyyy")
-    : "N/A";
-
+const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  onClick,
+  onEdit,
+  onDelete,
+}) => {
   return (
-    <div
-      className={cn(
-        "cursor-pointer rounded-xl border-l-4 p-4 shadow-sm transition hover:shadow-md",
-        statusStyleMap[task.status as Status] || "border-gray-300",
-      )}
-      onClick={onClick}
-    >
-      <div className="mb-1 truncate text-base font-semibold">{task.title}</div>
-      <div className="mb-2 line-clamp-2 text-sm text-muted-foreground">
-        {task.description}
-      </div>
+    <Card className="relative cursor-pointer border border-gray-300 shadow-sm hover:border-primary">
+      {/* Icon ba chấm với Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="absolute right-2 top-2 z-10 rounded p-1 hover:bg-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal size={18} />
+          </button>
+        </DropdownMenuTrigger>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-        <Badge variant="outline">Priority: {task.priority}</Badge>
-        <Badge variant="secondary">Tag: {task.tag || "None"}</Badge>
-        <Badge variant="outline">
-          {task.assigneeInfo?.fullName || "Unassigned"}
-        </Badge>
-      </div>
+        <DropdownMenuContent align="end" className="z-20 w-28">
+          <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
 
-      <div className="mt-2 text-xs text-muted-foreground">
-        {formattedStart} → {formattedEnd}
-      </div>
-    </div>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+            className="text-red-500"
+          >
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <CardContent className="cursor-pointer space-y-2 p-4" onClick={onClick}>
+        <div className="flex items-center justify-between pr-6">
+          <h3 className="text-md font-semibold">{task.title}</h3>
+          <Badge variant="outline" className="text-xs capitalize">
+            {task.priority}
+          </Badge>
+        </div>
+
+        <p className="line-clamp-2 text-sm text-muted-foreground">
+          {task.description || "No description"}
+        </p>
+
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span>
+            Start:{" "}
+            {task.startDate
+              ? format(new Date(task.startDate), "dd/MM/yyyy")
+              : "--"}
+          </span>
+          <span>
+            Due:{" "}
+            {task.endDate ? format(new Date(task.endDate), "dd/MM/yyyy") : "--"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 pt-1">
+          <Circle
+            className={`${getStatusColor(task.status)} h-3 w-3 rounded-full`}
+          />
+          <span className="text-xs capitalize text-gray-600">
+            {task.status}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default TaskCard;

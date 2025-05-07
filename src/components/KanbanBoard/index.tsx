@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   DndContext,
@@ -14,11 +12,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 import { Task } from "@/types/task";
 import { Status } from "@/types/status";
 import { useUpdateTaskStatusMutation } from "@/state/api/modules/taskApi";
 import TaskCard from "../TaskCard";
 import DroppableColumn from "../DroppableColumn";
+import EditTaskModal from "../EditTaskModal";
 
 const STATUS_COLUMNS: { status: Status; label: string }[] = [
   { status: Status.ToDo, label: "To Do" },
@@ -30,11 +30,13 @@ const STATUS_COLUMNS: { status: Status; label: string }[] = [
 interface KanbanBoardProps {
   tasks: Task[];
   departmentId?: string;
+  onTaskUpdate?: () => void;
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onTaskUpdate }) => {
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const [columns, setColumns] = useState(() =>
     STATUS_COLUMNS.reduce(
@@ -83,6 +85,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
 
       try {
         await updateTaskStatus({ taskId, status: targetStatus });
+        if (onTaskUpdate) onTaskUpdate(); // gọi lại ProjectTasksPage để sync lại tasks
       } catch (err) {
         console.error("❌ Failed to update task status:", err);
       }
@@ -109,6 +112,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                     key={task.taskID}
                     task={task}
                     status={status}
+                    onEditClick={() => {
+                      console.log("✅ Task selected:", task.title);
+                      setSelectedTask(task);
+                    }}
                   />
                 ))}
               </div>
@@ -116,6 +123,18 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
           </DroppableColumn>
         ))}
       </div>
+
+      {selectedTask && (
+        <EditTaskModal
+          isOpen={!!selectedTask}
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={() => {
+            setSelectedTask(null);
+            if (onTaskUpdate) onTaskUpdate();
+          }}
+        />
+      )}
 
       <DragOverlay>
         {activeTask ? <TaskCard task={activeTask} /> : null}
@@ -126,7 +145,15 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
 
 export default KanbanBoard;
 
-function SortableTaskCard({ task, status }: { task: Task; status: Status }) {
+function SortableTaskCard({
+  task,
+  status,
+  onEditClick,
+}: {
+  task: Task;
+  status: Status;
+  onEditClick?: () => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: task.taskID,
@@ -139,8 +166,18 @@ function SortableTaskCard({ task, status }: { task: Task; status: Status }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard task={task} />
+    <div ref={setNodeRef} style={style} {...attributes}>
+      {/* Bọc vùng kéo */}
+      <div {...listeners}>
+        {/* có thể là icon kéo hoặc vùng nhỏ nếu bạn muốn */}
+      </div>
+
+      {/* Phần nội dung có thể click để mở modal */}
+      <TaskCard
+        task={task}
+        onClick={onEditClick} // Click toàn nội dung mở modal
+        onEdit={onEditClick} // Menu Edit vẫn hoạt động
+      />
     </div>
   );
 }

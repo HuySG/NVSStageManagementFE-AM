@@ -15,6 +15,11 @@ export const projectApi = baseApi.injectEndpoints({
       query: (userId) => `project/userId?userId=${userId}`,
       providesTags: ["Projects"],
     }),
+
+    getProjectDetailsById: build.query<Project, string>({
+      query: (projectId) => `/project/${projectId}/details`,
+      providesTags: ["Projects"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -26,4 +31,6 @@ export const {
   useGetProjectsDepartmentQuery,
   //getProjectsByUserId
   useGetProjectsByUserIdQuery,
+  //getProjectDetailsById
+  useGetProjectDetailsByIdQuery,
 } = projectApi;

@@ -90,6 +90,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
             expireTime: expire,
           }),
         );
+        console.log("Login successful:", res.result.token);
+
         router.push("/home");
       } else {
         throw new Error("Sai tài khoản hoặc mật khẩu");

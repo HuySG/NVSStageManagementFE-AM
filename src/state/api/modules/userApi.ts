@@ -31,6 +31,10 @@ export const userApi = baseApi.injectEndpoints({
       query: (userId) => `user/${userId}`,
       providesTags: ["Users"],
     }),
+    getUserByDepartment: build.query<User[], string>({
+      query: (departmentId) => `user/department?Id=${departmentId}`,
+      providesTags: ["Users"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -44,4 +48,6 @@ export const {
   useGetUsersQuery,
   //getUserById
   useGetUserByIdQuery,
+  //getUserByDepartment
+  useGetUserByDepartmentQuery,
 } = userApi;
