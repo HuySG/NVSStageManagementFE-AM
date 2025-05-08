@@ -102,7 +102,7 @@ const BorrowedAssetByDepartmentPage = () => {
               const request = requestMap[asset.taskID];
               const borrower = request?.requesterInfo?.fullName ?? "Unknown";
               const taskTitle = request?.task?.title ?? "Unknown Task";
-              const detailUrl = `/borrowAssets/${projectId}/${departmentId}/${asset.borrowedId}`;
+              const detailUrl = `/borrowAssets/${projectId}/${departmentId}/${asset.borrowedID}`;
               const assetId = asset.assetID;
               const { data: assetDetail } = useGetAssetByIdQuery(assetId, {
                 skip: !assetId,
@@ -110,7 +110,7 @@ const BorrowedAssetByDepartmentPage = () => {
 
               return (
                 <Link
-                  key={asset.borrowedId}
+                  key={asset.borrowedID}
                   href={detailUrl}
                   className="grid cursor-pointer grid-cols-6 items-center px-6 py-4 text-sm text-gray-700 transition hover:bg-gray-50"
                 >

@@ -1,5 +1,5 @@
 export interface BorrowedAsset {
-  borrowedId: string;
+  borrowedID: string;
   assetID: string;
   taskID: string;
   borrowTime: string;
