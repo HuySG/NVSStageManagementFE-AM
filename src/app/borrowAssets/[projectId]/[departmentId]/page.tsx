@@ -7,6 +7,7 @@ import { CircularProgress } from "@mui/material";
 import { format } from "date-fns";
 import { FileText } from "lucide-react";
 import Link from "next/link";
+import { useGetAssetByIdQuery } from "@/state/api/modules/assetApi";
 
 const BorrowedAssetByDepartmentPage = () => {
   const { projectId, departmentId } = useParams<{
@@ -87,8 +88,9 @@ const BorrowedAssetByDepartmentPage = () => {
         <div className="overflow-x-auto">
           <div className="min-w-full divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
             {/* Header */}
-            <div className="grid grid-cols-4 bg-gray-100 px-6 py-3 text-left text-sm font-semibold text-gray-700">
+            <div className="grid grid-cols-5 bg-gray-100 px-6 py-3 text-left text-sm font-semibold text-gray-700">
               <div>#</div>
+              <div>Asset Name</div>
               <div>Task Title</div>
               <div>Borrowed By</div>
               <div>Borrow Time</div>
@@ -100,12 +102,16 @@ const BorrowedAssetByDepartmentPage = () => {
               const borrower = request?.requesterInfo?.fullName ?? "Unknown";
               const taskTitle = request?.task?.title ?? "Unknown Task";
               const detailUrl = `/borrowAssets/${projectId}/${departmentId}/${asset.borrowedId}`;
+              const assetId = asset.assetID;
+              const { data: assetDetail } = useGetAssetByIdQuery(assetId, {
+                skip: !assetId,
+              });
 
               return (
                 <Link
                   key={asset.borrowedId}
                   href={detailUrl}
-                  className="grid cursor-pointer grid-cols-4 items-center px-6 py-4 text-sm text-gray-700 transition hover:bg-gray-50"
+                  className="grid cursor-pointer grid-cols-5 items-center px-6 py-4 text-sm text-gray-700 transition hover:bg-gray-50"
                 >
                   {/* STT */}
                   <div>{index + 1}</div>
@@ -114,6 +120,11 @@ const BorrowedAssetByDepartmentPage = () => {
                   <div className="flex items-center gap-2 truncate">
                     <FileText className="h-4 w-4 text-blue-500" />
                     <span className="truncate">{taskTitle}</span>
+                  </div>
+
+                  {/* Asset Name */}
+                  <div className="truncate">
+                    {assetDetail?.assetName || "Đang tải tên tài sản..."}
                   </div>
 
                   {/* Borrowed By */}

@@ -18,6 +18,9 @@ export const assetApi = baseApi.injectEndpoints({
       }),
       providesTags: ["AssetTypes"],
     }),
+    getAssetById: build.query<Asset, string>({
+      query: (id) => `/asset/${id}`,
+    }),
   }),
   overrideExisting: false,
 });
@@ -26,4 +29,6 @@ export const {
   useGetAssetsQuery,
   //getAssetTypes
   useGetAssetTypesQuery,
+  //getAssetById
+  useGetAssetByIdQuery,
 } = assetApi;
