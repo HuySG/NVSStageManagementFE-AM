@@ -20,6 +20,10 @@ export const projectApi = baseApi.injectEndpoints({
       query: (projectId) => `/project/${projectId}/details`,
       providesTags: ["Projects"],
     }),
+    getProjectAMByDepartmentId: build.query<Project[], string>({
+      query: (deptId) => `/tasks/departments/${deptId}/prepare-projects`,
+      providesTags: ["Projects"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -33,4 +37,6 @@ export const {
   useGetProjectsByUserIdQuery,
   //getProjectDetailsById
   useGetProjectDetailsByIdQuery,
+  //getProjectAMByDepartmentId
+  useGetProjectAMByDepartmentIdQuery,
 } = projectApi;

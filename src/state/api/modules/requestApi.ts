@@ -3,7 +3,6 @@ import { baseApi } from "../baseApi";
 import { CheckAvailabilityResult } from "@/types/checkAvailabilityResult";
 import { Asset } from "@/types/asset";
 import { AllocateAsset } from "@/types/AllocateAsset";
-import { Task } from "@/types/task";
 
 export const requestApi = baseApi.injectEndpoints({
   endpoints: (build) => ({

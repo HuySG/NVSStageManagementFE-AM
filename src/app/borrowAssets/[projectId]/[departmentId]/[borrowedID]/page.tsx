@@ -7,6 +7,13 @@ import { useGetAssetByIdQuery } from "@/state/api/modules/assetApi";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { useGetUsageHistoryByAssetQuery } from "@/state/api/modules/allocationApi";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const BorrowedAssetDetailPage = () => {
   const { projectId, departmentId, borrowedID } = useParams<{
@@ -43,7 +50,8 @@ const BorrowedAssetDetailPage = () => {
     assetId,
     { skip: !assetId },
   );
-
+  const { data: usageHistory = [], isLoading: isLoadingHistory } =
+    useGetUsageHistoryByAssetQuery(assetId, { skip: !assetId });
   const request = requestMap[asset.taskID];
   const borrower = request?.requesterInfo?.fullName ?? "Không rõ";
   const taskTitle = request?.task?.title ?? "Không rõ";
@@ -100,6 +108,61 @@ const BorrowedAssetDetailPage = () => {
           <p className="font-medium text-gray-500">Mô tả:</p>
           <p>{asset.description || "Không có mô tả"}</p>
         </div>
+        {/* Lịch sử sử dụng */}
+        <Accordion type="single" collapsible className="mt-10">
+          <AccordionItem value="usage-history">
+            <AccordionTrigger>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Lịch sử sử dụng tài sản
+              </h2>
+            </AccordionTrigger>
+            <AccordionContent>
+              {isLoadingHistory ? (
+                <p className="mt-2 text-sm text-gray-500">
+                  Đang tải lịch sử...
+                </p>
+              ) : usageHistory.length === 0 ? (
+                <p className="mt-2 text-sm text-gray-500">
+                  Không có lịch sử sử dụng.
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-4 text-sm text-gray-700">
+                  {usageHistory.map((history) => (
+                    <li
+                      key={history.usageID}
+                      className="border-l-4 border-blue-500 pl-4"
+                    >
+                      <p>
+                        <strong>Dự án:</strong>{" "}
+                        {history.projectName ?? "Không rõ"}
+                      </p>
+                      <p>
+                        <strong>Thời gian:</strong>{" "}
+                        {format(new Date(history.startDate), "dd/MM/yyyy")} –{" "}
+                        {format(new Date(history.endDate), "dd/MM/yyyy")}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <strong>Trạng thái:</strong>
+                        <Badge
+                          variant="outline"
+                          className={
+                            history.status === "IN_USE"
+                              ? "border-yellow-500 text-yellow-700"
+                              : history.status === "RETURNED"
+                                ? "border-green-600 text-green-700"
+                                : "border-gray-400 text-gray-600"
+                          }
+                        >
+                          {history.status}
+                        </Badge>
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );

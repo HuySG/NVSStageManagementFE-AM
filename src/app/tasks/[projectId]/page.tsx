@@ -1,5 +1,6 @@
 "use client";
 
+import Breadcrumb from "@/components/Breadcrumb";
 import KanbanBoard from "@/components/KanbanBoard";
 import {
   useGetProjectDetailsByIdQuery,
@@ -42,6 +43,13 @@ const ProjectTasksPage = () => {
 
   return (
     <div className="space-y-6 p-6">
+      <Breadcrumb
+        items={[
+          { label: "Project", href: "/tasks" },
+          { label: project?.title || "Project" },
+        ]}
+      />
+
       <h1 className="text-2xl font-bold">
         {isProjectLoading ? "Đang tải..." : project?.title || "Dự án"}
       </h1>
