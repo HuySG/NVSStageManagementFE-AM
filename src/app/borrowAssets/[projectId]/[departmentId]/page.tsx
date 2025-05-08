@@ -88,13 +88,13 @@ const BorrowedAssetByDepartmentPage = () => {
         <div className="overflow-x-auto">
           <div className="min-w-full divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
             {/* Header */}
-            <div className="grid grid-cols-5 bg-gray-100 px-6 py-3 text-left text-sm font-semibold text-gray-700">
+            <div className="grid grid-cols-6 bg-gray-100 px-6 py-3 text-left text-sm font-semibold text-gray-700">
               <div>No</div>
               <div>Task Title</div>
               <div>Asset Name</div>
-
               <div>Borrowed By</div>
               <div>Borrow Time</div>
+              <div>Return Time</div>
             </div>
 
             {/* Items */}
@@ -112,7 +112,7 @@ const BorrowedAssetByDepartmentPage = () => {
                 <Link
                   key={asset.borrowedId}
                   href={detailUrl}
-                  className="grid cursor-pointer grid-cols-5 items-center px-6 py-4 text-sm text-gray-700 transition hover:bg-gray-50"
+                  className="grid cursor-pointer grid-cols-6 items-center px-6 py-4 text-sm text-gray-700 transition hover:bg-gray-50"
                 >
                   {/* STT */}
                   <div>{index + 1}</div>
@@ -134,6 +134,10 @@ const BorrowedAssetByDepartmentPage = () => {
                   {/* Borrow Time */}
                   <div className="truncate">
                     {format(new Date(asset.borrowTime), "dd MMM yyyy HH:mm")}
+                  </div>
+                  {/* Borrow Time */}
+                  <div className="truncate">
+                    {format(new Date(asset.endTime), "dd MMM yyyy HH:mm")}
                   </div>
                 </Link>
               );
