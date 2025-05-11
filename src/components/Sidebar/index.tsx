@@ -76,7 +76,7 @@ const Sidebar = () => {
           <SidebarLink icon={Briefcase} label="TimeLine" href="/timeline" />
           <SidebarLink icon={Search} label="Search" href="/search" />
           <SidebarLink icon={Settings} label="Settings" href="/settings" />
-          <SidebarLink icon={User} label="Users" href="/users" />
+          <SidebarLink icon={User} label="Tasks" href="/staff-tasks" />
           <SidebarLink
             icon={LucideChartNoAxesGantt}
             label="Tasks"

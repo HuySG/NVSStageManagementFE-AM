@@ -6,6 +6,7 @@ import { Task } from "./task";
 
 export interface AssetRequest {
   requestId: string;
+  title: string;
   quantity: number;
   description: string;
   startTime: string;

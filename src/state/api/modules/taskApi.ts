@@ -1,5 +1,6 @@
 import { Task } from "@/types/task";
 import { baseApi } from "../baseApi";
+import { PrepareTaskDetail } from "@/types/PrepareTaskDetail";
 
 export const taskApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -83,6 +84,10 @@ export const taskApi = baseApi.injectEndpoints({
         { type: "Tasks", id: taskId },
       ],
     }),
+    getPreparationDetails: build.query<PrepareTaskDetail, string>({
+      query: (prepareTaskId) => `tasks/${prepareTaskId}/preparation-details`,
+      providesTags: ["Tasks"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -109,4 +114,6 @@ export const {
   useGetPrepareTasksByProjectIdQuery,
   //deleteTask
   useDeleteTaskMutation,
+  //getPreparationDetails
+  useGetPreparationDetailsQuery,
 } = taskApi;

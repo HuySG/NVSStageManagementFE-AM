@@ -9,6 +9,7 @@ export const allocationApi = baseApi.injectEndpoints({
     }),
     getUsageHistoryByAsset: build.query<AssetUsageHistory[], string>({
       query: (assetId) => `/asset/${assetId}/usage-history`,
+      providesTags: ["Allocation"],
     }),
   }),
   overrideExisting: false,

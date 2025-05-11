@@ -1,5 +1,6 @@
 import { Project } from "@/types/project";
 import { baseApi } from "../baseApi";
+import { ProjectWithPrepareTasks } from "@/types/ProjectWithPrepareTasks ";
 
 export const projectApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -24,6 +25,13 @@ export const projectApi = baseApi.injectEndpoints({
       query: (deptId) => `/tasks/departments/${deptId}/prepare-projects`,
       providesTags: ["Projects"],
     }),
+    getPrepareProjectsByAssignee: build.query<
+      ProjectWithPrepareTasks[],
+      string
+    >({
+      query: (assigneeId) => `tasks/assignees/${assigneeId}/prepare-projects`,
+      providesTags: ["Projects"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -39,4 +47,6 @@ export const {
   useGetProjectDetailsByIdQuery,
   //getProjectAMByDepartmentId
   useGetProjectAMByDepartmentIdQuery,
+  //getPrepareProjectsByAssignee
+  useGetPrepareProjectsByAssigneeQuery,
 } = projectApi;
