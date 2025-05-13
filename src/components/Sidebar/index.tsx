@@ -27,6 +27,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import UserProfile from "../UserProfile/index";
+import { useGetUserInfoQuery } from "@/state/api/modules/userApi";
 
 const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
@@ -35,6 +36,9 @@ const Sidebar = () => {
   const isSidebarCollapsed = useAppSelector(
     (state) => state.global.isSidebarCollapsed,
   );
+  const { data: user } = useGetUserInfoQuery();
+  const role = user?.role?.roleName;
+  console.log("role", role);
 
   const sidebarClassnames = `fixed flex flex-col h-[100%] justify-between shadow-xl transition-all duration-300 h-full z-40 dark:bg-black overflow-y-auto bg-white  ${
     isSidebarCollapsed ? "w-0 hidden" : "w-64"
@@ -72,28 +76,44 @@ const Sidebar = () => {
         </div>
         {/* Navbar Links */}
         <nav className="z-10 w-full">
-          <SidebarLink icon={Home} label="Home" href="/" />
-          <SidebarLink icon={Briefcase} label="TimeLine" href="/timeline" />
-          <SidebarLink icon={Search} label="Search" href="/search" />
-          <SidebarLink icon={Settings} label="Settings" href="/settings" />
-          <SidebarLink icon={User} label="Tasks" href="/staff-tasks" />
-          <SidebarLink
-            icon={LucideChartNoAxesGantt}
-            label="Tasks"
-            href="/tasks"
-          />
-          <SidebarLink icon={ScrollText} label="Requests" href="/requests" />
-          <SidebarLink icon={Warehouse} label="Assets" href="/assets" />
-          <SidebarLink
-            icon={Warehouse}
-            label="Borrow Asset List"
-            href="/borrowAssets"
-          />
-          <SidebarLink
-            icon={Warehouse}
-            label="Return Asset List"
-            href="/returnAssets"
-          />
+          {role === "Leader" && (
+            <>
+              <SidebarLink icon={Home} label="Home" href="/" />
+              <SidebarLink icon={Briefcase} label="TimeLine" href="/timeline" />
+              <SidebarLink icon={Search} label="Search" href="/search" />
+              <SidebarLink icon={Settings} label="Settings" href="/settings" />
+              <SidebarLink
+                icon={LucideChartNoAxesGantt}
+                label="Tasks"
+                href="/tasks"
+              />
+              <SidebarLink
+                icon={ScrollText}
+                label="Requests"
+                href="/requests"
+              />
+              <SidebarLink icon={Warehouse} label="Assets" href="/assets" />
+              <SidebarLink
+                icon={Warehouse}
+                label="Borrow Asset List"
+                href="/borrowAssets"
+              />
+              <SidebarLink
+                icon={Warehouse}
+                label="Return Asset List"
+                href="/returnAssets"
+              />
+            </>
+          )}
+          {role === "Staff" && (
+            <>
+              <SidebarLink icon={Home} label="Home" href="/home-staff" />
+              <SidebarLink icon={Briefcase} label="TimeLine" href="/timeline" />
+              <SidebarLink icon={Search} label="Search" href="/search" />
+              <SidebarLink icon={Settings} label="Settings" href="/settings" />
+              <SidebarLink icon={User} label="Tasks" href="/staff-tasks" />
+            </>
+          )}
         </nav>
       </div>
       <UserProfile />

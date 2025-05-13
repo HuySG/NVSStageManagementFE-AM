@@ -46,7 +46,6 @@ const BorrowAssetsOverviewPage = () => {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {Object.entries(groupedByProjectAndDepartment).map(
           ([projectId, projectData]) => {
-            // 👉 Tính tổng số assets trong project này
             const totalAssets = Object.values(projectData.departments).reduce(
               (sum, dept) => sum + dept.assets.length,
               0,

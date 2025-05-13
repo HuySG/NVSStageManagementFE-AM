@@ -90,9 +90,19 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
             expireTime: expire,
           }),
         );
+
         console.log("Login successful:", res.result.token);
 
-        router.push("/home");
+        const info = await refetch().unwrap();
+        const role = info?.role?.roleName;
+        console.log("Redirecting to:", role);
+        if (role === "Staff") {
+          router.push("/home-staff");
+        } else if (role === "Leader" || role === "Leader AM") {
+          router.push("/");
+        } else {
+          router.push("/home"); // fallback nếu role không xác định
+        }
       } else {
         throw new Error("Sai tài khoản hoặc mật khẩu");
       }

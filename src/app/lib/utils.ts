@@ -53,12 +53,12 @@ export function groupAssetsByProjectAndDepartment(
 
   borrowedAssets.forEach((asset) => {
     const request = assetRequests.find((r) => r.task?.taskID === asset.taskID);
-    const projectId = request?.projectInfo?.projectID ?? "unknown";
+    const projectId = request?.projectInfo?.projectID;
     const projectTitle = request?.projectInfo?.title ?? "Unknown Project";
     const departmentId = request?.requesterInfo?.department?.id ?? "unknown";
     const departmentName =
       request?.requesterInfo?.department?.name ?? "Unknown Department";
-
+    if (!projectId) return;
     if (!grouped[projectId]) {
       grouped[projectId] = {
         title: projectTitle,
@@ -91,7 +91,6 @@ export const buildRequestedQuantitiesFromCheckResult = (
     quantities[catId] = (quantities[catId] || 0) + 1;
   });
 
-  // 💡 Bảo vệ chắc chắn kiểu mảng
   const missingCats = Array.isArray(result.missingCategories)
     ? result.missingCategories
     : [];
