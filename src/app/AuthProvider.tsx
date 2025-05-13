@@ -11,6 +11,7 @@ import {
 import { RootState } from "./redux";
 import { User } from "@/types/user";
 import { Loader2 } from "lucide-react";
+import { baseApi } from "@/state/api/baseApi";
 
 interface AuthContextType {
   user: User | null;
@@ -74,8 +75,19 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (userInfo && token) {
       dispatch(setAuthData({ user: userInfo, token, expireTime: expireTime! }));
+
+      const role = userInfo.role?.roleName;
+      console.log("Redirecting from useEffect with role:", role);
+
+      if (role === "Staff") {
+        router.push("/home-staff");
+      } else if (role === "Leader") {
+        router.push("/home");
+      } else {
+        router.push("/");
+      }
     }
-  }, [userInfo, token, expireTime, dispatch]);
+  }, [userInfo, token, expireTime, dispatch, pathname, router]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -90,19 +102,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
             expireTime: expire,
           }),
         );
-
         console.log("Login successful:", res.result.token);
-
-        const info = await refetch().unwrap();
-        const role = info?.role?.roleName;
-        console.log("Redirecting to:", role);
-        if (role === "Staff") {
-          router.push("/home-staff");
-        } else if (role === "Leader" || role === "Leader AM") {
-          router.push("/");
-        } else {
-          router.push("/home"); // fallback nếu role không xác định
-        }
       } else {
         throw new Error("Sai tài khoản hoặc mật khẩu");
       }
@@ -118,6 +118,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     dispatch(logoutUser());
+    dispatch(baseApi.util.resetApiState());
     router.push("/login");
   };
 
