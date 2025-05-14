@@ -76,15 +76,31 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (userInfo && token) {
       dispatch(setAuthData({ user: userInfo, token, expireTime: expireTime! }));
 
-      const role = userInfo.role?.roleName;
-      console.log("Redirecting from useEffect with role:", role);
+      const role = userInfo.role?.roleName?.toLowerCase();
+      const isStaff = role === "staff";
+      const isLeader = role === "leader" || role === "leader am";
 
-      if (role === "Staff") {
-        router.push("/home-staff");
-      } else if (role === "Leader") {
+      const isOnStaffOnlyRoute =
+        pathname.startsWith("/home-staff") ||
+        pathname.startsWith("/staff-tasks");
+
+      // 🚨 Nếu leader đang ở trang staff → redirect về /home
+      if (isLeader && isOnStaffOnlyRoute) {
         router.push("/home");
-      } else {
-        router.push("/");
+      }
+
+      // 🚨 Nếu staff đang không ở trang staff → redirect về /home-staff
+      if (isStaff && !isOnStaffOnlyRoute) {
+        router.push("/home-staff");
+      }
+
+      // ✅ Nếu đang login lần đầu và ở /login → redirect lần đầu theo role
+      if (pathname === "/login") {
+        if (isStaff) {
+          router.push("/home-staff");
+        } else if (isLeader) {
+          router.push("/home");
+        }
       }
     }
   }, [userInfo, token, expireTime, dispatch, pathname, router]);
