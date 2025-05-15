@@ -9,8 +9,8 @@ import {
 import { useGetPrepareTasksByProjectIdQuery } from "@/state/api/modules/taskApi";
 import { Task } from "@/types/task";
 import { Loader } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const ProjectTasksPage = () => {
   const params = useParams();
@@ -32,9 +32,21 @@ const ProjectTasksPage = () => {
       skip: !projectId,
     });
   const handleTaskUpdate = async () => {
-    await refetch(); // gọi lại API sau khi update task thành công
-    setRefreshKey((prev) => prev + 1); // để bắt buộc render lại Kanban
+    await refetch();
+    setRefreshKey((prev) => prev + 1);
   };
+  const router = useRouter();
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        router.refresh(); // 🔄 Force refetch tất cả các hook useQuery
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
 
   if (!projectId) return <div className="p-4 text-center">No project ID</div>;
   if (isLoading) return <Loader className="mt-20" />;
@@ -58,6 +70,8 @@ const ProjectTasksPage = () => {
         key={refreshKey}
         tasks={tasks as Task[]}
         onTaskUpdate={handleTaskUpdate}
+        projectId={projectId}
+        projectTitle={project?.title || "Project"}
       />
     </div>
   );
