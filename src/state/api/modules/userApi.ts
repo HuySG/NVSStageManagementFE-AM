@@ -29,6 +29,8 @@ export const userApi = baseApi.injectEndpoints({
     }),
     getUserById: build.query<User, string>({
       query: (userId) => `user/${userId}`,
+      transformResponse: (response: { code: number; result: User }) =>
+        response.result,
       providesTags: ["Users"],
     }),
     getUserByDepartment: build.query<User[], string>({

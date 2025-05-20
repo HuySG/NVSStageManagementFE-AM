@@ -101,7 +101,7 @@ const Sidebar = () => {
               <SidebarLink
                 icon={Warehouse}
                 label="Return Asset List"
-                href="/returnAssets"
+                href="/return-request"
               />
             </>
           )}

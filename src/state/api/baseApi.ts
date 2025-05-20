@@ -26,6 +26,7 @@ export const baseApi = createApi({
     "BorrowedAssets",
     "ReturnAssets",
     "Allocation",
+    "ReturnRequest",
   ],
   endpoints: () => ({}),
 });

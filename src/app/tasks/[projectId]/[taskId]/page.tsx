@@ -35,17 +35,24 @@ import {
 import { useUploadBeforeImagesMutation } from "@/state/api/modules/requestApi";
 import { useGetProjectDetailsByIdQuery } from "@/state/api/modules/projectApi";
 import { uploadToFirebase } from "@/lib/firebase";
+import { ArrowLeft } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
+import { toast } from "react-toastify";
 
 export default function EditTaskPage() {
   const { projectId, taskId } = useParams();
   const router = useRouter();
 
   const { data: currentUser } = useGetUserInfoQuery();
-  const { data: task } = useGetTaskByIdQuery(taskId as string, {
-    skip: !taskId,
-  });
+  const { data: task, refetch: refetchTask } = useGetTaskByIdQuery(
+    taskId as string,
+    {
+      skip: !taskId,
+    },
+  );
   const { data: project } = useGetProjectDetailsByIdQuery(projectId as string, {
     skip: !projectId,
+    refetchOnMountOrArgChange: true,
   });
 
   const {
@@ -54,6 +61,7 @@ export default function EditTaskPage() {
     refetch: refetchDetail,
   } = useGetPreparationDetailsQuery(taskId as string, {
     skip: !taskId,
+    refetchOnMountOrArgChange: true,
   });
 
   const { data: departmentUsers = [] } = useGetUserByDepartmentQuery(
@@ -62,6 +70,13 @@ export default function EditTaskPage() {
       skip: !currentUser?.department?.id,
     },
   );
+  useEffect(() => {
+    const onFocus = () => {
+      refetchTask();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -91,8 +106,7 @@ export default function EditTaskPage() {
       updateBy: currentUser?.id || "SYSTEM",
       updateDate: new Date().toISOString(),
     });
-    alert("Cập nhật thành công!");
-    router.push(`/tasks/${projectId}`);
+    toast.success("Cập nhật task thành công!");
   };
 
   const handleUpload = async (allocationId: string, files: FileList) => {
@@ -124,16 +138,18 @@ export default function EditTaskPage() {
 
   return (
     <div className="min-h-screen bg-white px-8 py-10">
-      <Link
-        href={`/tasks/${projectId}`}
-        className="text-sm text-blue-600 hover:underline"
-      >
-        ← Quay lại danh sách task
-      </Link>
+      <Breadcrumb
+        items={[
+          { label: "Projects", href: "/tasks" },
+          {
+            label: project?.title || "Project",
+            href: `/tasks/${projectId}?updated=true`,
+          },
+          { label: task.title || "Task" },
+        ]}
+      />
 
-      <h1 className="mt-4 text-3xl font-bold text-gray-800">
-        Chỉnh sửa Task: {task.title}
-      </h1>
+      <h1 className="mt-4 text-3xl font-bold text-gray-800">{task.title}</h1>
 
       {/* Thông tin yêu cầu */}
       {detail?.request?.map((r) => (

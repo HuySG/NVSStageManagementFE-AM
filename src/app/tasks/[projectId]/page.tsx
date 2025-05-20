@@ -2,22 +2,17 @@
 
 import Breadcrumb from "@/components/Breadcrumb";
 import KanbanBoard from "@/components/KanbanBoard";
-import {
-  useGetProjectDetailsByIdQuery,
-  useGetProjectsByUserIdQuery,
-} from "@/state/api/modules/projectApi";
+import { useGetProjectDetailsByIdQuery } from "@/state/api/modules/projectApi";
 import { useGetPrepareTasksByProjectIdQuery } from "@/state/api/modules/taskApi";
 import { Task } from "@/types/task";
 import { Loader } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const ProjectTasksPage = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
-
   const [refreshKey, setRefreshKey] = useState(0);
-
   const {
     data: tasks = [],
     isLoading,
@@ -26,7 +21,6 @@ const ProjectTasksPage = () => {
   } = useGetPrepareTasksByProjectIdQuery(projectId, {
     skip: !projectId,
   });
-
   const { data: project, isLoading: isProjectLoading } =
     useGetProjectDetailsByIdQuery(projectId, {
       skip: !projectId,
@@ -35,18 +29,14 @@ const ProjectTasksPage = () => {
     await refetch();
     setRefreshKey((prev) => prev + 1);
   };
-  const router = useRouter();
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        router.refresh(); // 🔄 Force refetch tất cả các hook useQuery
-      }
-    };
+  const searchParams = useSearchParams();
+  const shouldRefresh = searchParams.get("updated") === "true";
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+  useEffect(() => {
+    if (shouldRefresh) {
+      refetch(); // cập nhật task mới nhất
+    }
+  }, [shouldRefresh]);
 
   if (!projectId) return <div className="p-4 text-center">No project ID</div>;
   if (isLoading) return <Loader className="mt-20" />;
