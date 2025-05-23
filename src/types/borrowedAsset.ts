@@ -6,4 +6,5 @@ export interface BorrowedAsset {
   endTime: string;
   description: string;
   status: string;
+  requestId: string;
 }

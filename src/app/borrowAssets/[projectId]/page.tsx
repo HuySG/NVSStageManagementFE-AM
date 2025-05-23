@@ -45,7 +45,10 @@ const BorrowedAssetDepartmentsPage = () => {
   // Filter borrowed assets by projectId
   const filteredAssets = borrowedAssets.filter((asset) => {
     const request = requestMap[asset.taskID];
-    return request?.projectInfo?.projectID === projectId;
+    return (
+      request?.projectInfo?.projectID === projectId &&
+      asset.status !== "RETURNED"
+    );
   });
 
   // Group by department

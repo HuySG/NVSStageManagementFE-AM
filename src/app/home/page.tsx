@@ -51,12 +51,13 @@ export default function HomePage() {
   const approved = requests.filter((r) => r.status === "AM_APPROVED");
   const rejected = requests.filter((r) => r.status === "REJECTED");
 
-  const assetPreparing = borrowedAssets.filter(
-    (a) => a.status === "PREPARING",
-  ).length;
-  const assetBorrowed = borrowedAssets.filter(
-    (a) => a.status === "BORROWED",
-  ).length;
+  const assetPreparing = Array.isArray(borrowedAssets)
+    ? borrowedAssets.filter((a) => a.status === "PREPARING").length
+    : 0;
+
+  const assetBorrowed = Array.isArray(borrowedAssets)
+    ? borrowedAssets.filter((a) => a.status === "BORROWED").length
+    : 0;
 
   const recentRequests = [...requests]
     .sort(

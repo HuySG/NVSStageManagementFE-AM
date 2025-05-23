@@ -5,6 +5,13 @@ export const borrowAssetsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getBorrowedAssets: build.query<BorrowedAsset[], void>({
       query: () => "borrowed-assets",
+      transformResponse: (response: {
+        code: number;
+        message: string;
+        result: BorrowedAsset[];
+      }) => {
+        return response.result;
+      },
       providesTags: ["BorrowedAssets"],
     }),
 

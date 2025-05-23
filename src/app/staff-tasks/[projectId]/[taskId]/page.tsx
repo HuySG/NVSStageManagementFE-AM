@@ -19,6 +19,7 @@ import {
   useUpdateAssetStatusMutation,
   useUploadBeforeImagesMutation,
 } from "@/state/api/modules/requestApi";
+import { toast } from "react-toastify";
 
 const PrepareAssetDetailPage = () => {
   const { projectId, taskId } = useParams();
@@ -67,7 +68,7 @@ const PrepareAssetDetailPage = () => {
     const requestId = detail?.request?.[0]?.requestId;
     if (!user?.id || !requestId) return;
     await updateStatus({ requestId, status: "PREPARED", approverId: user.id });
-    alert("Đã hoàn tất chuẩn bị!");
+    toast.success("Đã hoàn tất chuẩn bị!");
     router.push(`/staff-tasks/${projectId}`);
   };
 
@@ -144,7 +145,7 @@ const PrepareAssetDetailPage = () => {
 
                   {successMap[asset.allocationId] && (
                     <p className="mt-1 text-sm font-semibold text-green-600">
-                      ✅ Đã lưu thành công
+                      Đã lưu thành công
                     </p>
                   )}
 

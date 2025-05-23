@@ -50,7 +50,8 @@ const BorrowedAssetByDepartmentPage = () => {
     const request = requestMap[asset.taskID];
     return (
       request?.projectInfo?.projectID === projectId &&
-      request?.requesterInfo?.department?.id === departmentId
+      request?.requesterInfo?.department?.id === departmentId &&
+      asset.status !== "RETURNED"
     );
   });
 

@@ -51,14 +51,20 @@ export function groupAssetsByProjectAndDepartment(
     };
   } = {};
 
-  borrowedAssets.forEach((asset) => {
-    const request = assetRequests.find((r) => r.task?.taskID === asset.taskID);
-    const projectId = request?.projectInfo?.projectID;
+  const taskIdToRequestMap = new Map(
+    assetRequests.filter((r) => r.task?.taskID).map((r) => [r.task!.taskID, r]),
+  );
+
+  for (const asset of borrowedAssets) {
+    const request = taskIdToRequestMap.get(asset.taskID);
+
+    const projectId = request?.projectInfo?.projectID ?? "unknown_project";
     const projectTitle = request?.projectInfo?.title ?? "Unknown Project";
-    const departmentId = request?.requesterInfo?.department?.id ?? "unknown";
+    const departmentId =
+      request?.requesterInfo?.department?.id ?? "unknown_department";
     const departmentName =
       request?.requesterInfo?.department?.name ?? "Unknown Department";
-    if (!projectId) return;
+
     if (!grouped[projectId]) {
       grouped[projectId] = {
         title: projectTitle,
@@ -74,7 +80,7 @@ export function groupAssetsByProjectAndDepartment(
     }
 
     grouped[projectId].departments[departmentId].assets.push(asset);
-  });
+  }
 
   return grouped;
 }
