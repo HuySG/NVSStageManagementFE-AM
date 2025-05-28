@@ -84,23 +84,23 @@ const Sidebar = () => {
               <SidebarLink icon={Settings} label="Settings" href="/settings" />
               <SidebarLink
                 icon={LucideChartNoAxesGantt}
-                label="Tasks"
+                label="Danh Sách Công Việc"
                 href="/tasks"
               />
               <SidebarLink
                 icon={ScrollText}
-                label="Requests"
+                label="Yêu cầu tài sản"
                 href="/requests"
               />
-              <SidebarLink icon={Warehouse} label="Assets" href="/assets" />
+              <SidebarLink icon={Warehouse} label="Tài Sản" href="/assets" />
               <SidebarLink
                 icon={Warehouse}
-                label="Borrow Asset List"
+                label="Tài Sản Đang Mượn"
                 href="/borrowAssets"
               />
               <SidebarLink
                 icon={Warehouse}
-                label="Return Asset List"
+                label="Tài Sản Trả Lại"
                 href="/return-request"
               />
             </>

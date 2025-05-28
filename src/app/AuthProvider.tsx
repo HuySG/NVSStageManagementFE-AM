@@ -30,7 +30,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     (state: RootState) => state.global,
   );
 
-  const [isLoading, setIsLoading] = useState(true); // 👈 trạng thái loading
+  const [isLoading, setIsLoading] = useState(true);
   const [loginUser] = useLoginUserMutation();
   const {
     data: userInfo,
@@ -40,7 +40,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     skip: !token,
   });
 
-  // Xử lý xác thực khi có token
+  // Xác thực khi có token, tự logout khi hết hạn hoặc chưa login
   useEffect(() => {
     const processAuth = async () => {
       if (token && expireTime) {
@@ -57,11 +57,11 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else if (!token && pathname !== "/login") {
         router.push("/login");
       }
-
-      setIsLoading(false); // ✅ kết thúc loading sau khi xử lý xong
+      setIsLoading(false);
     };
 
     processAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     token,
     expireTime,
@@ -72,38 +72,13 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     router,
   ]);
 
+  // Chỉ cập nhật lại redux khi userInfo thay đổi
   useEffect(() => {
     if (userInfo && token) {
       dispatch(setAuthData({ user: userInfo, token, expireTime: expireTime! }));
-
-      const role = userInfo.role?.roleName?.toLowerCase();
-      const isStaff = role === "staff";
-      const isLeader = role === "leader" || role === "leader am";
-
-      const isOnStaffOnlyRoute =
-        pathname.startsWith("/home-staff") ||
-        pathname.startsWith("/staff-tasks");
-
-      // 🚨 Nếu leader đang ở trang staff → redirect về /home
-      if (isLeader && isOnStaffOnlyRoute) {
-        router.push("/home");
-      }
-
-      // 🚨 Nếu staff đang không ở trang staff → redirect về /home-staff
-      if (isStaff && !isOnStaffOnlyRoute) {
-        router.push("/home-staff");
-      }
-
-      // ✅ Nếu đang login lần đầu và ở /login → redirect lần đầu theo role
-      if (pathname === "/login") {
-        if (isStaff) {
-          router.push("/home-staff");
-        } else if (isLeader) {
-          router.push("/home");
-        }
-      }
+      // KHÔNG redirect theo role ở đây nữa
     }
-  }, [userInfo, token, expireTime, dispatch, pathname, router]);
+  }, [userInfo, token, expireTime, dispatch]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -118,7 +93,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
             expireTime: expire,
           }),
         );
-        console.log("Login successful:", res.result.token);
+        router.push("/home"); // Redirect về dashboard chung
       } else {
         throw new Error("Sai tài khoản hoặc mật khẩu");
       }
@@ -138,7 +113,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push("/login");
   };
 
-  // 👇 Loading UI trong AuthProvider
+  // Loading UI trong AuthProvider
   if (isLoading || isFetching) {
     return (
       <div className="flex h-screen items-center justify-center bg-white">

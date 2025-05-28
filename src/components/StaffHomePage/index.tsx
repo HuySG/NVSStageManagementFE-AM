@@ -1,17 +1,19 @@
 "use client";
 
 import { useGetUserInfoQuery } from "@/state/api/modules/userApi";
-import { Card, CardContent } from "@/components/ui/card";
 import { useGetPrepareProjectsByAssigneeQuery } from "@/state/api/modules/projectApi";
 import { useGetBorrowedAssetsQuery } from "@/state/api/modules/borrowAssetApi";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
-export default function StaffDashboard() {
-  const { data: user } = useGetUserInfoQuery();
-  const { data: prepareProjects = [] } = useGetPrepareProjectsByAssigneeQuery(
-    user?.id!,
-    { skip: !user?.id },
-  );
-  const { data: borrowedAssets = [] } = useGetBorrowedAssetsQuery();
+export default function StaffHomePage() {
+  const { data: user, isLoading: isUserLoading } = useGetUserInfoQuery();
+  const { data: prepareProjects = [], isLoading: isPrepareLoading } =
+    useGetPrepareProjectsByAssigneeQuery(user?.id!, { skip: !user?.id });
+  const { data: borrowedAssets = [], isLoading: isBorrowedLoading } =
+    useGetBorrowedAssetsQuery();
+
+  const loading = isUserLoading || isPrepareLoading || isBorrowedLoading;
 
   const totalTasks = prepareProjects.reduce(
     (acc, project) => acc + project.prepareTasks.length,
@@ -29,6 +31,15 @@ export default function StaffDashboard() {
   const borrowedCount = borrowedAssets.filter(
     (a) => a.status === "BORROWED",
   ).length;
+
+  if (loading) {
+    return (
+      <div className="flex h-72 items-center justify-center text-blue-500">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+        Đang tải dữ liệu...
+      </div>
+    );
+  }
 
   return (
     <main className="space-y-10 p-6">
