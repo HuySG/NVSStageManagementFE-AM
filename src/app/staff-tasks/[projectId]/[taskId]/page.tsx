@@ -67,7 +67,7 @@ const PrepareAssetDetailPage = () => {
   const handleComplete = async () => {
     const requestId = detail?.request?.[0]?.requestId;
     if (!user?.id || !requestId) return;
-    await updateStatus({ requestId, status: "PREPARED", approverId: user.id });
+    await updateStatus({ requestId, status: "IN_USE", approverId: user.id });
     toast.success("Đã hoàn tất chuẩn bị!");
     router.push(`/staff-tasks/${projectId}`);
   };
