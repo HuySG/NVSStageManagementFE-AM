@@ -4,11 +4,13 @@ import { Status } from "@/types/status";
 const StaffDroppableColumn = ({
   children,
   status,
+  className = "",
 }: {
   children: React.ReactNode;
   status: Status;
+  className?: string;
 }) => {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: { status },
   });
@@ -16,7 +18,9 @@ const StaffDroppableColumn = ({
   return (
     <div
       ref={setNodeRef}
-      className="min-h-[300px] rounded border bg-gray-50 p-3"
+      className={`${className} transition-all duration-100 ${
+        isOver ? "bg-blue-50/80 ring-2 ring-blue-400 dark:bg-blue-900/30" : ""
+      }`}
     >
       {children}
     </div>

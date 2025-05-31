@@ -1,4 +1,4 @@
-import { BorrowedAsset } from "@/types/borrowedAsset";
+import { BorrowedAsset, StaffBorrowedAsset } from "@/types/borrowedAsset";
 import { baseApi } from "../baseApi";
 
 export const borrowAssetsApi = baseApi.injectEndpoints({
@@ -40,6 +40,11 @@ export const borrowAssetsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["BorrowedAssets"],
     }),
+    getStaffBorrowedAssets: build.query<StaffBorrowedAsset[], string>({
+      query: (staffId) => `borrowed-assets/staff/${staffId}`,
+      transformResponse: (response: { result: StaffBorrowedAsset[] }) =>
+        response.result,
+    }),
   }),
   overrideExisting: false,
 });
@@ -52,4 +57,6 @@ export const {
   useCreateBorrowedAssetMutation,
   //deleteBorrowedAsset
   useDeleteBorrowedAssetMutation,
+  //getStaffBorrowedAssets
+  useGetStaffBorrowedAssetsQuery,
 } = borrowAssetsApi;

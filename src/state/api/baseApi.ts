@@ -27,6 +27,7 @@ export const baseApi = createApi({
     "ReturnAssets",
     "Allocation",
     "ReturnRequest",
+    "Notification",
   ],
   endpoints: () => ({}),
 });

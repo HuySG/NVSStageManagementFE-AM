@@ -27,6 +27,8 @@ const BorrowAssetsOverviewPage = () => {
     borrowedAssets,
     assetRequests,
   );
+  console.log("groupedByProjectAndDepartment", groupedByProjectAndDepartment);
+
   const totalBorrowedAssets = activeAssets.length;
 
   return (

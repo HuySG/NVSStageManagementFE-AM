@@ -5,23 +5,23 @@ import { Status } from "@/types/status";
 interface DroppableColumnProps {
   status: Status;
   children: ReactNode;
+  className?: string; // thêm dòng này
 }
 
 export default function DroppableColumn({
   status,
   children,
+  className, // thêm dòng này
 }: DroppableColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
-    data: {
-      status,
-    },
+    data: { status },
   });
 
   return (
     <div
       ref={setNodeRef}
-      className="min-h-[80px] rounded-xl bg-gray-100 p-4 shadow-md"
+      className={`min-h-[80px] rounded-xl p-4 shadow-md ${className || "bg-gray-100"}`}
     >
       {children}
     </div>

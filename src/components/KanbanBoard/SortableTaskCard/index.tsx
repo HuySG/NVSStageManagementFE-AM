@@ -12,15 +12,9 @@ interface Props {
   task: Task;
   status: Status;
   projectId: string;
-  projectTitle: string;
 }
 
-export default function SortableTaskCard({
-  task,
-  status,
-  projectId,
-  projectTitle,
-}: Props) {
+export default function SortableTaskCard({ task, status, projectId }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: task.taskID,
@@ -34,30 +28,28 @@ export default function SortableTaskCard({
     transition,
   };
 
-  const handleEditClick = () => {
+  // Để click toàn bộ card sẽ sang trang chi tiết
+  const handleClick = () => {
     router.push(`/tasks/${projectId}/${task.taskID}`);
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className="relative rounded border bg-white shadow-sm"
-    >
-      {/* Drag Handle Icon (≡) */}
-      <div
-        {...listeners}
-        className="absolute left-2 top-2 z-10 cursor-grab text-gray-400"
-        onClick={(e) => e.stopPropagation()} // để không mở Edit khi kéo
-        title="Kéo để di chuyển"
-      >
-        <GripVertical className="h-4 w-4" />
-      </div>
+    <div ref={setNodeRef} style={style} {...attributes} className="">
+      <div className="relative">
+        {/* Drag Handle bên phải (giống staff) */}
+        <div
+          {...listeners}
+          className="absolute right-2 top-2 z-10 cursor-grab text-gray-400"
+          onClick={(e) => e.stopPropagation()}
+          title="Kéo để di chuyển"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
 
-      {/* Click toàn card để mở Edit page */}
-      <div onClick={handleEditClick}>
-        <TaskCard task={task} onEdit={handleEditClick} />
+        {/* Card click => chi tiết */}
+        <div onClick={handleClick}>
+          <TaskCard task={task} status={status} projectId={projectId} />
+        </div>
       </div>
     </div>
   );

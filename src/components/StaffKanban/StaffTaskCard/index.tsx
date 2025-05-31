@@ -13,6 +13,7 @@ interface StaffTaskCardProps {
   task: PrepareTask;
   status: Status;
   projectId: string;
+  dragPreview?: boolean; // thêm prop này!
 }
 
 const getStatusColor = (status: string) => {
@@ -34,11 +35,13 @@ const StaffTaskCard: React.FC<StaffTaskCardProps> = ({
   task,
   status,
   projectId,
+  dragPreview = false, // default = false
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: task.taskID,
       data: { status },
+      disabled: dragPreview, // Không dùng sortable hook khi là dragPreview
     });
 
   const style = {
@@ -53,17 +56,27 @@ const StaffTaskCard: React.FC<StaffTaskCardProps> = ({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div
+      ref={!dragPreview ? setNodeRef : undefined}
+      style={style}
+      {...(!dragPreview ? attributes : {})}
+      className={` ${dragPreview ? "z-50 scale-105 opacity-90 shadow-2xl" : ""} transition-all`}
+    >
       <div className="cursor-pointer" onClick={handleClick}>
-        <Card className="border border-gray-300 shadow-sm transition hover:border-blue-500">
+        <Card
+          className={`border border-gray-300 shadow-sm transition hover:border-blue-500 ${dragPreview ? "scale-105 border-blue-300 shadow-2xl" : ""} `}
+        >
           <CardContent className="relative space-y-2 p-4">
-            <div
-              {...listeners}
-              className="absolute right-2 top-2 h-4 w-4 cursor-grab"
-              onClick={(e) => e.stopPropagation()} // ngăn click kéo trigger luôn handleClick
-            >
-              ⠿
-            </div>
+            {/* Drag handle */}
+            {!dragPreview && (
+              <div
+                {...listeners}
+                className="absolute right-2 top-2 h-4 w-4 cursor-grab"
+                onClick={(e) => e.stopPropagation()}
+              >
+                ⠿
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <h3 className="text-md font-semibold">{task.title}</h3>
               <Badge variant="outline" className="text-xs capitalize">

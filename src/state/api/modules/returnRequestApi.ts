@@ -29,6 +29,12 @@ export const returnRequestApi = baseApi.injectEndpoints({
         response.result,
       providesTags: ["ReturnRequest"],
     }),
+    getReturnRequestsByStaffId: build.query<ReturnRequest[], string>({
+      query: (staffId) => `/return-requests/staff/${staffId}`,
+      transformResponse: (response: { result: ReturnRequest[] }) =>
+        response.result,
+      providesTags: ["ReturnRequest"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -36,4 +42,5 @@ export const {
   useGetPendingReturnRequestsQuery,
   useProcessReturnRequestMutation,
   useGetReturnRequestByIdQuery,
+  useGetReturnRequestsByStaffIdQuery,
 } = returnRequestApi;

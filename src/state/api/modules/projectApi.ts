@@ -21,7 +21,7 @@ export const projectApi = baseApi.injectEndpoints({
       query: (projectId) => `/project/${projectId}/details`,
       providesTags: ["Projects"],
     }),
-    getProjectAMByDepartmentId: build.query<Project[], string>({
+    getProjectAMByDepartmentId: build.query<ProjectWithPrepareTasks[], string>({
       query: (deptId) => `/tasks/departments/${deptId}/prepare-projects`,
       providesTags: ["Projects"],
     }),

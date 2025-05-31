@@ -1,20 +1,19 @@
 "use client";
 
-import { Task } from "@/types/task";
-import { Badge } from "@/components/ui/badge";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Circle, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Status } from "@/types/status";
+import { Task } from "@/types/task";
+import { useRouter } from "next/navigation";
 
 interface TaskCardProps {
   task: Task;
-  onClick?: () => void;
+  status: Status;
+  projectId: string;
+  dragPreview?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -34,75 +33,113 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "ToDo":
+      return "Cần thực hiện";
+    case "WorkInProgress":
+      return "Đang thực hiện";
+    case "UnderReview":
+      return "Chờ duyệt";
+    case "Completed":
+      return "Hoàn thành";
+    default:
+      return status;
+  }
+};
+
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
-  onClick,
+  status,
+  projectId,
+  dragPreview = false,
   onEdit,
   onDelete,
 }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: task.taskID,
+      data: { status },
+      disabled: dragPreview,
+    });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/tasks/${projectId}/${task.taskID}`);
+  };
+
   return (
-    <Card className="relative cursor-pointer border border-gray-300 shadow-sm hover:border-primary">
-      {/* Icon ba chấm với Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="absolute right-2 top-2 z-10 rounded p-1 hover:bg-gray-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MoreHorizontal size={18} />
-          </button>
-        </DropdownMenuTrigger>
+    <div
+      ref={!dragPreview ? setNodeRef : undefined}
+      style={style}
+      {...(!dragPreview ? attributes : {})}
+      className={` ${dragPreview ? "z-50 scale-105 opacity-90 shadow-2xl" : ""} transition-all`}
+    >
+      <div className="cursor-pointer" onClick={handleClick}>
+        <Card
+          className={`border border-gray-300 shadow-sm transition hover:border-blue-500 ${
+            dragPreview ? "scale-105 border-blue-300 shadow-2xl" : ""
+          } `}
+        >
+          <CardContent className="relative space-y-2 p-4">
+            {/* Drag handle */}
+            {!dragPreview && (
+              <div
+                {...listeners}
+                className="absolute right-2 top-2 h-4 w-4 cursor-grab"
+                onClick={(e) => e.stopPropagation()}
+                title="Kéo để di chuyển"
+              >
+                ⠿
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-semibold">{task.title}</h3>
+              <Badge variant="outline" className="text-xs capitalize">
+                {task.priority}
+              </Badge>
+            </div>
 
-        <DropdownMenuContent align="end" className="z-20 w-28">
-          <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {task.description || "Không có mô tả"}
+            </p>
 
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete?.();
-            }}
-            className="text-red-500"
-          >
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>
+                Bắt đầu:{" "}
+                {task.startDate
+                  ? format(new Date(task.startDate), "dd/MM/yyyy")
+                  : "--"}
+              </span>
+              <span>
+                Hạn:{" "}
+                {task.endDate
+                  ? format(new Date(task.endDate), "dd/MM/yyyy")
+                  : "--"}
+              </span>
+            </div>
 
-      <CardContent className="cursor-pointer space-y-2 p-4" onClick={onClick}>
-        <div className="flex items-center justify-between pr-6">
-          <h3 className="text-md font-semibold">{task.title}</h3>
-          <Badge variant="outline" className="text-xs capitalize">
-            {task.priority}
-          </Badge>
-        </div>
-
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {task.description || "No description"}
-        </p>
-
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>
-            Start:{" "}
-            {task.startDate
-              ? format(new Date(task.startDate), "dd/MM/yyyy")
-              : "--"}
-          </span>
-          <span>
-            Due:{" "}
-            {task.endDate ? format(new Date(task.endDate), "dd/MM/yyyy") : "--"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 pt-1">
-          <Circle
-            className={`${getStatusColor(task.status)} h-3 w-3 rounded-full`}
-          />
-          <span className="text-xs capitalize text-gray-600">
-            {task.status}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+            <div className="flex items-center gap-2 pt-1">
+              <div
+                className={`h-3 w-3 rounded-full ${getStatusColor(task.status)}`}
+              />
+              <span className="text-xs capitalize text-gray-600">
+                {getStatusLabel(task.status)}
+              </span>
+              <span className="text-xs capitalize text-gray-600">
+                {task.status}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
