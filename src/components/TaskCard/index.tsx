@@ -16,6 +16,7 @@ interface TaskCardProps {
   dragPreview?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  onClick?: () => void;
 }
 
 const getStatusColor = (status: string) => {
@@ -53,6 +54,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   status,
   projectId,
   dragPreview = false,
+
   onEdit,
   onDelete,
 }) => {
