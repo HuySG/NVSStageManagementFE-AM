@@ -1,237 +1,102 @@
 "use client";
-import { useState, useMemo } from "react";
-import Image from "next/image";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useState, useMemo } from "react";
+import Link from "next/link";
+import { Briefcase, Search } from "lucide-react";
 import { useGetAssetsQuery } from "@/state/api/modules/assetApi";
 
-const AssetsTable = () => {
-  const { data: assets = [], error, isLoading } = useGetAssetsQuery();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [assetTypeFilter, setAssetTypeFilter] = useState<string | null>(null);
-  // Lọc các assets theo điều kiện
-  const filteredAssets = useMemo(() => {
+const AssetTypesPage = () => {
+  const { data: assets = [], isLoading, error } = useGetAssetsQuery();
+  const [search, setSearch] = useState("");
+
+  // Lấy danh sách kiểu tài sản duy nhất và filter theo search
+  const assetTypes = useMemo(() => {
+    const typeMap = new Map<string, any>();
+    assets.forEach((a) => {
+      if (a.assetType && a.assetType.id && a.assetType.name) {
+        typeMap.set(a.assetType.id, a.assetType);
+      }
+    });
+    return Array.from(typeMap.values())
+      .filter((t) => t.name.toLowerCase().includes(search.trim().toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [assets, search]);
+
+  const totalTypes = assetTypes.length;
+
+  if (isLoading)
     return (
-      assets?.filter((asset) => {
-        const matchesName = asset.assetName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-
-        const matchesStatus = statusFilter
-          ? asset.status === statusFilter
-          : true;
-
-        const matchesCategory = categoryFilter
-          ? asset.category?.name === categoryFilter
-          : true;
-
-        const matchesAssetType = assetTypeFilter
-          ? asset.assetType?.name === assetTypeFilter
-          : true;
-
-        return (
-          matchesName && matchesStatus && matchesCategory && matchesAssetType
-        );
-      }) || []
+      <div className="p-10 text-center text-gray-400">
+        Đang tải kiểu tài sản...
+      </div>
     );
-  }, [assets, searchTerm, statusFilter, categoryFilter, assetTypeFilter]);
-  // Lấy danh sách các categories duy nhất từ các asset
-
-  const uniqueCategories = useMemo(() => {
-    const categories = assets?.map((asset) => asset.category?.name);
-    return Array.from(new Set(categories)); // Lọc danh sách các category duy nhất
-  }, [assets]);
-
-  // Lấy danh sách các asset types duy nhất từ các asset
-  const uniqueAssetTypes = useMemo(() => {
-    const assetTypes = assets?.map((asset) => asset.assetType?.name);
-    return Array.from(new Set(assetTypes)); // Lọc danh sách các asset type duy nhất
-  }, [assets]);
-  // Phân trang các dữ liệu đã lọc
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedAssets = filteredAssets.slice(
-    startIndex,
-    startIndex + pageSize,
-  );
-
-  // Xử lý thay đổi trang
-  const handleNextPage = () => {
-    if (currentPage * pageSize < filteredAssets.length) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
-
-  const totalPages = Math.ceil(filteredAssets.length / pageSize);
-
-  if (isLoading) {
+  if (error)
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Asset Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-4 py-2">
-              <Skeleton className="h-12 w-12 rounded" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <div className="p-10 text-center text-red-500">
+        Không thể tải dữ liệu kiểu tài sản.
+      </div>
     );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Asset Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-500">Error loading assets.</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Asset Management</CardTitle>
-        <CardDescription>
-          Manage and view all assets in the system.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="overflow-auto">
-        {/* Bộ lọc (Search & Filters) */}
-        <div className="mb-4 flex space-x-4">
-          <input
-            type="text"
-            placeholder="Search by name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="rounded-md border px-4 py-2"
-          />
-          <select
-            value={statusFilter || ""}
-            onChange={(e) => setStatusFilter(e.target.value || null)}
-            className="rounded-md border px-4 py-2"
-          >
-            <option value="">All Status</option>
-            <option value="Available">Available</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-          <select
-            value={categoryFilter || ""}
-            onChange={(e) => setCategoryFilter(e.target.value || null)}
-            className="rounded-md border px-4 py-2"
-          >
-            <option value="">All Categories</option>
-            {uniqueCategories?.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-          <select
-            value={assetTypeFilter || ""}
-            onChange={(e) => setAssetTypeFilter(e.target.value || null)}
-            className="rounded-md border px-4 py-2"
-          >
-            <option value="">All Asset Type</option>
-            {uniqueAssetTypes?.map((assetType, index) => (
-              <option key={index} value={assetType}>
-                {assetType}
-              </option>
-            ))}
-          </select>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
+      <header className="w-full border-b border-gray-200 bg-white px-8 py-8 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-800 dark:text-white">
+              <Briefcase className="h-8 w-8 text-blue-500" />
+              Quản lý Kiểu tài sản
+            </h1>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
+              Danh sách các kiểu tài sản, chọn để xem các loại bên trong.
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <Search className="mr-2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm kiểu tài sản..."
+                className="w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2 text-base shadow-sm outline-none transition focus:border-blue-400 focus:ring-1 focus:ring-blue-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            {/* Tổng số kiểu tài sản */}
+            <div className="mt-4">
+              <span className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                Tổng kiểu tài sản:&nbsp;
+                <span className="text-lg font-bold text-blue-600">
+                  {totalTypes}
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
+      </header>
 
-        {/* Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Asset Name</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Buy Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Asset Type</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedAssets.map((asset) => (
-              <TableRow key={asset.assetID}>
-                <TableCell>{asset.assetName}</TableCell>
-                <TableCell>{asset.model}</TableCell>
-                <TableCell>{asset.code}</TableCell>
-                <TableCell>{asset.description}</TableCell>
-                <TableCell>${asset.price}</TableCell>
-                <TableCell>{asset.buyDate}</TableCell>
-                <TableCell>{asset.status}</TableCell>
-                <TableCell>{asset.location}</TableCell>
-                <TableCell>{asset.createdBy}</TableCell>
-                <TableCell>{asset.category?.name || "N/A"}</TableCell>
-                <TableCell>{asset.assetType?.name || "N/A"}</TableCell>
-              </TableRow>
+      <main className="w-full px-8 py-10">
+        {assetTypes.length === 0 ? (
+          <div className="py-16 text-center text-gray-400">
+            Không có kiểu tài sản nào.
+          </div>
+        ) : (
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {assetTypes.map((type) => (
+              <Link
+                key={type.id}
+                href={`/assets/${type.id}`}
+                className="group flex flex-col items-start rounded-2xl border border-gray-100 bg-gradient-to-b from-white to-slate-50 p-6 shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:from-neutral-800 dark:to-neutral-900"
+              >
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 transition group-hover:bg-blue-100 dark:bg-blue-900">
+                  <Briefcase className="h-8 w-8 text-blue-600 group-hover:text-blue-700 dark:text-blue-400" />
+                </div>
+                <div className="mb-2 min-h-[48px] break-words text-lg font-bold text-gray-800 group-hover:text-blue-700 dark:text-white">
+                  {type.name}
+                </div>
+              </Link>
             ))}
-          </TableBody>
-        </Table>
-
-        {/* Pagination controls */}
-        <div className="mt-4 flex items-center justify-between">
-          <button
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-            className="rounded-md bg-gray-300 px-4 py-2"
-          >
-            Previous
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className="rounded-md bg-gray-300 px-4 py-2"
-          >
-            Next
-          </button>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        )}
+      </main>
+    </div>
   );
 };
 
-export default AssetsTable;
+export default AssetTypesPage;

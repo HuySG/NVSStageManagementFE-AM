@@ -19,3 +19,19 @@ export interface Asset {
   category: AssetCategory; // Một tài sản chỉ thuộc một loại tài sản
   assetType: AssetType; // Một tài sản chỉ thuộc một kiểu tài sản
 }
+
+export interface AssetCreate {
+  assetID?: string;
+  assetName: string;
+  model: string;
+  code: string;
+  description?: string;
+  price?: number;
+  buyDate?: string;
+  status: string;
+  locationId?: string;
+  createdBy?: string;
+  image?: string;
+  categoryID: string;
+  assetTypeID: string;
+}

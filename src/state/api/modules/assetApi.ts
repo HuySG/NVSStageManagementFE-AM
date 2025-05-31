@@ -1,4 +1,4 @@
-import { Asset } from "@/types/asset";
+import { Asset, AssetCreate } from "@/types/asset";
 import { baseApi } from "../baseApi";
 import { AssetType } from "@/types/assetType";
 
@@ -21,6 +21,14 @@ export const assetApi = baseApi.injectEndpoints({
     getAssetById: build.query<Asset, string>({
       query: (id) => `/asset/${id}`,
     }),
+    createAsset: build.mutation<AssetCreate, Partial<AssetCreate>>({
+      query: (body) => ({
+        url: "asset",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Assets"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -31,4 +39,6 @@ export const {
   useGetAssetTypesQuery,
   //getAssetById
   useGetAssetByIdQuery,
+  //createAsset
+  useCreateAssetMutation,
 } = assetApi;
