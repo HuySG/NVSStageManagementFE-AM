@@ -83,7 +83,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const res = await loginUser({ email, password }).unwrap();
-      const expire = Date.now() + 60 * 60 * 1000;
+      const expire = Date.now() + 12 * 60 * 60 * 1000;
 
       if (res.result.authenticated) {
         dispatch(
