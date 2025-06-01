@@ -17,7 +17,7 @@ export const requestApi = baseApi.injectEndpoints({
         method: "POST",
         body: [assetRequest],
       }),
-      invalidatesTags: ["AssetRequests"], // Xóa cache để cập nhật dữ liệu mới
+      invalidatesTags: ["AssetRequests"],
     }),
 
     getRequestAssetByDepartment: build.query<AssetRequest[], string>({
@@ -33,15 +33,26 @@ export const requestApi = baseApi.injectEndpoints({
     }),
     updateAssetStatus: build.mutation<
       void,
-      { requestId: string; status: string; approverId: string }
+      {
+        requestId: string;
+        status: string;
+        approverId: string;
+        rejectionReason?: string;
+      }
     >({
-      query: ({ requestId, status, approverId }) => ({
+      query: ({ requestId, status, approverId, rejectionReason }) => ({
         url: "request-asset/status",
         method: "PUT",
-        body: { requestId, status, approverId },
+        body: {
+          requestId,
+          status,
+          approverId,
+          ...(status === "REJECTED" ? { rejectionReason } : {}),
+        },
       }),
       invalidatesTags: ["AssetRequests"],
     }),
+
     acceptBookingRequest: build.mutation<
       AssetRequest,
       { requestId: string; userId: string }

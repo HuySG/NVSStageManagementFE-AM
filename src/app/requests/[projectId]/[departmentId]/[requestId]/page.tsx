@@ -1,17 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   useGetAssetRequestsForManagerQuery,
   useGetCheckAvailabilityResultQuery,
+  useUpdateAssetStatusMutation,
 } from "@/state/api/modules/requestApi";
 import { format } from "date-fns";
 import ManualAssetAllocationSection from "@/components/ManualAssetAllocationSection";
 import CheckAvailabilityDisplay from "@/components/CheckAvailability";
 import { buildRequestedQuantitiesFromCheckResult } from "@/app/lib/utils";
 import { ChevronRight, FileText } from "lucide-react";
+import { toast } from "react-toastify";
+import { useGetUserInfoQuery } from "@/state/api/modules/userApi";
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> =
   {
@@ -40,10 +43,17 @@ const statusMap: Record<string, { label: string; color: string; bg: string }> =
 
 const RequestDetailPage = () => {
   const { requestId, projectId, departmentId } = useParams();
+  const router = useRouter();
   const { data: allRequests = [] } = useGetAssetRequestsForManagerQuery();
   const { data: result } = useGetCheckAvailabilityResultQuery(
     requestId as string,
   );
+  const { data: user } = useGetUserInfoQuery();
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [updateAssetStatus, { isLoading: isRejecting }] =
+    useUpdateAssetStatusMutation();
+
   const requestedQuantities = result
     ? buildRequestedQuantitiesFromCheckResult(result)
     : {};
@@ -68,6 +78,28 @@ const RequestDetailPage = () => {
     label: request.status,
     color: "text-gray-800",
     bg: "bg-gray-100",
+  };
+
+  // Xử lý từ chối yêu cầu
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Vui lòng nhập lý do từ chối.");
+      return;
+    }
+    try {
+      await updateAssetStatus({
+        requestId: request.requestId,
+        status: "REJECTED",
+        approverId: user?.id || "",
+        rejectionReason,
+      }).unwrap();
+      toast.success("Đã từ chối yêu cầu thành công!");
+      setShowRejectModal(false);
+      setRejectionReason("");
+      router.push("/requests");
+    } catch (e) {
+      toast.error("Từ chối yêu cầu thất bại.");
+    }
   };
 
   return (
@@ -240,6 +272,51 @@ const RequestDetailPage = () => {
                 Đang tải dữ liệu phân bổ...
               </div>
             )}
+          </div>
+        )}
+
+        {/* Nút từ chối - chuyển sang bên trái */}
+        <div className="mt-8 flex justify-start">
+          {request.status === "PENDING_AM" && (
+            <button
+              onClick={() => setShowRejectModal(true)}
+              className="rounded-lg bg-red-500 px-5 py-2 font-bold text-white shadow transition hover:bg-red-600"
+            >
+              Từ chối yêu cầu
+            </button>
+          )}
+        </div>
+
+        {/* Modal từ chối */}
+        {showRejectModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg dark:bg-neutral-900">
+              <h3 className="mb-4 text-lg font-semibold text-red-600">
+                Xác nhận từ chối yêu cầu
+              </h3>
+              <textarea
+                className="mb-4 min-h-[80px] w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-neutral-800"
+                placeholder="Nhập lý do từ chối..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  className="rounded bg-gray-200 px-4 py-2 font-medium hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
+                  onClick={() => setShowRejectModal(false)}
+                  disabled={isRejecting}
+                >
+                  Huỷ
+                </button>
+                <button
+                  className="rounded bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-600"
+                  onClick={handleReject}
+                  disabled={isRejecting}
+                >
+                  {isRejecting ? "Đang gửi..." : "Từ chối"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

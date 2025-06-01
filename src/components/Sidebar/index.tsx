@@ -22,8 +22,12 @@ const Sidebar = () => {
   const isSidebarCollapsed = useAppSelector(
     (state) => state.global.isSidebarCollapsed,
   );
-  const { data: user } = useGetUserInfoQuery();
+  const { data: user, isLoading, error } = useGetUserInfoQuery();
+
   const role = user?.role?.roleName;
+  // Loading/error UI
+  if (isLoading) return <div>Đang tải...</div>;
+  if (error || !user) return <div>Lỗi tải thông tin người dùng</div>;
 
   // Sidebar styles
   const sidebarClassnames = `
@@ -64,7 +68,7 @@ const Sidebar = () => {
           </div>
           <div className="flex flex-col">
             <h3 className="text-base font-semibold leading-tight tracking-wide text-gray-800 dark:text-gray-100">
-              ASSET TEAM
+              {user.department?.name || "No Department"}
             </h3>
             <div className="mt-1 flex items-center gap-1">
               <LockIcon className="h-3 w-3 text-gray-400" />
